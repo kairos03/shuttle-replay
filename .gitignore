@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+out/
+*.mp4
+*.mov
+*.pt
+*.pth
+*.onnx
