@@ -47,6 +47,18 @@ schemas
 
 ```{toctree}
 :maxdepth: 1
+:caption: Explicações técnicas
+
+technology
+camera-calibration
+trajectory-physics
+observations-timing
+rendering-safety
+validation-limits
+```
+
+```{toctree}
+:maxdepth: 1
 :caption: Idiomas
 
 languages
