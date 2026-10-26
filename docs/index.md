@@ -36,16 +36,16 @@ real-world accuracy.*
 :caption: Guide
 
 getting-started
+guide
 workflow
 schemas
 ```
 
 ```{toctree}
 :maxdepth: 1
-:caption: Other languages
+:caption: Languages
 
 languages
-usage.ko
 ```
 
 ```{toctree}

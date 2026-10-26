@@ -1,0 +1,21 @@
+{#- Same-page language selector at the top of every page body. All pages are
+    top-level docnames, so a locale-root prefix plus the page file is enough. -#}
+<nav class="docs-language-selector" aria-label="{{ docs_language_label }}" data-docs-lang="{{ docs_lang }}">
+  <span class="docs-language-label">{{ docs_language_label }}:</span>
+  {%- for url, name in docs_languages %}
+  {%- if url == docs_lang %}
+  <strong class="docs-language-current" lang="{{ url }}" aria-current="true">{{ name }}</strong>
+  {%- else %}
+  <a class="docs-language-option" href="{{ docs_lang_prefix[url] }}{{ docs_pagename_html }}" hreflang="{{ url }}" lang="{{ url }}">{{ name }}</a>
+  {%- endif %}
+  {%- if not loop.last %}<span class="docs-language-sep" aria-hidden="true"> | </span>{% endif %}
+  {%- endfor %}
+</nav>
+{%- if pagename == "search" %}
+<script>
+  // Keep the search query when switching language.
+  document.querySelectorAll(".docs-language-option").forEach(function (a) {
+    a.href = a.href.split("?")[0] + window.location.search;
+  });
+</script>
+{%- endif %}

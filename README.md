@@ -196,11 +196,13 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-Build the docs site locally (strict, warnings are errors):
+Build the ten-language docs site locally (strict, warnings are errors) and
+verify it; see [docs/development.md](docs/development.md):
 
 ```bash
 uv sync --locked --only-group docs
-uv run --only-group docs sphinx-build -n -W --keep-going -b html docs docs/_build/html
+uv run --only-group docs python docs/build.py
+uv run --only-group docs python docs/verify_i18n.py
 ```
 
 </details>
