@@ -4,17 +4,12 @@
 
 ## データの流れ
 
-```text
- source video (local file) ----------------------------------------+
-                                                                   |
- calibration input JSON --> calibrate --> calibration JSON         |
- (ground points + net anchors)              (P, H, errors)         |
-                                                 |                 |
- tracks JSON (your detections, PTS) -------------+                 |
- review JSON (contacts, flight ends) ------------+                 |
-                                                 v                 v
-                                       analyze --> analysis JSON --> render --> replay MP4
-                                                                         +--> render report JSON
+```{figure} assets/technical/ja/pipeline.svg
+:alt: データフロー：キャリブレーション、トラック、レビューが analyze へ、動画と解析結果が render へ入り、リプレイ MP4 とレンダーレポートを出力
+:class: technical-figure
+:width: 100%
+
+3 つのコマンドの入力と出力。
 ```
 
 CLI は各矢印をコマンドとして提供します。`calibrate`、`analyze`、`render`、そして `run`(analyze と render を一度に実行)です。`demo` は完全に合成されたシーンを作り、その上で同じパイプラインを実行します([`cli.py` `build_parser`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/cli.py#L154-L191))。`run` では、`analysis.json` と `render_report.json` を書き出す前に動画をレンダリングして検証します。そのため、JSON の結果が失敗した動画を記述することはありません([`_run_pipeline`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/cli.py#L55-L63))。

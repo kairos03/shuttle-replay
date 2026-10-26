@@ -4,17 +4,12 @@
 
 ## 数据流
 
-```text
- source video (local file) ----------------------------------------+
-                                                                   |
- calibration input JSON --> calibrate --> calibration JSON         |
- (ground points + net anchors)              (P, H, errors)         |
-                                                 |                 |
- tracks JSON (your detections, PTS) -------------+                 |
- review JSON (contacts, flight ends) ------------+                 |
-                                                 v                 v
-                                       analyze --> analysis JSON --> render --> replay MP4
-                                                                         +--> render report JSON
+```{figure} assets/technical/zh/pipeline.svg
+:alt: 数据流：标定、轨迹和复核输入进入 analyze；视频和分析结果进入 render，输出回放 MP4 和渲染报告
+:class: technical-figure
+:width: 100%
+
+三个命令的输入与输出。
 ```
 
 CLI 把每个箭头作为一个命令提供：`calibrate`、`analyze`、`render`，以及 `run`（一步完成 analyze 和 render）。`demo` 会构建一个完全合成的场景，并在其上运行同一条流水线（[`cli.py` `build_parser`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/cli.py#L154-L191)）。在 `run` 中，视频会先渲染并通过验证，然后才写入 `analysis.json` 和 `render_report.json`，因此 JSON 结果永远不会描述一个失败的视频（[`_run_pipeline`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/cli.py#L55-L63)）。

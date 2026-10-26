@@ -63,7 +63,7 @@ release = _meta["version"]
 version = release
 language = _URL_TO_SPHINX[DOCS_LANG]
 
-extensions = ["myst_parser"]
+extensions = ["myst_parser", "sphinx.ext.mathjax"]
 source_suffix = {".md": "markdown"}
 root_doc = "index"
 # i18n/ holds translated sources, read only through source-read below.
@@ -84,7 +84,16 @@ html_theme = "furo"
 html_title = f"shuttle-replay {release}"
 html_copy_source = False
 html_show_sourcelink = False
-html_static_path = []
+html_static_path = ["_static"]
+html_css_files = ["technical.css"]
+# Self-hosted MathJax 3.2.2 (official npm package ``mathjax``, es5/tex-svg.js, Apache-2.0,
+# see docs/_static/mathjax/LICENSE and NOTICE.md). A relative path resolves under
+# _static, so every locale build loads its own local copy; no CDN request.
+mathjax_path = "mathjax/tex-svg.js"
+mathjax3_config = {
+    "options": {"enableAssistiveMml": True},
+    "svg": {"fontCache": "global"},
+}
 html_extra_path = ["_extra"]
 html_baseurl = SITE_URL if DOCS_LANG == "en" else f"{SITE_URL}{DOCS_LANG}/"
 html_search_language = language

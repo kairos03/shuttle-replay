@@ -16,17 +16,12 @@ rechts, `v` wächst nach unten.
 die BWF-Spielfeldmaße festgelegt ist
 ([`court.py`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/court.py#L1-L24)):
 
-```text
-      X = 0                X = 6.10
- Y = 0  +--------------------+   far baseline (outer edge)
-        |                    |
-        |                    |
- Y=6.70 |====== net =========|   net plane; posts 1.55 m, centre 1.524 m
-        |                    |
-        |                    |
-Y=13.40 +--------------------+   near baseline (outer edge)
+```{figure} assets/technical/de/court.svg
+:alt: Spielfeldmodell: X von 0 bis 6,10 m, Y von 0 (ferne Grundlinie) bis 13,40 m (nahe), Netzebene Y = 6,70 m, Pfosten 1,55 m, Mitte 1,524 m, Z nach oben
+:class: technical-figure
+:width: 100%
 
- Z is up; Z = 0 is the court surface.
+Spielfeldkoordinaten in Metern; Z zeigt nach oben, Z = 0 ist der Boden.
 ```
 
 Linien sind 40 mm breit, und Kalibrierpunkte verwenden **Linienmitten**:
@@ -42,11 +37,11 @@ Punkt um 2 cm.
 Eine Lochkamera bildet einen Weltpunkt mit einer 3x4-Matrix `P` auf ein Pixel
 ab:
 
-```text
- [a]       [X]
- [b] = P * [Y]        u = a / c ,  v = b / c
- [c]       [Z]
-           [1]
+```{math}
+\begin{gathered}
+\begin{bmatrix} a \\ b \\ c \end{bmatrix} = P \begin{bmatrix} X \\ Y \\ Z \\ 1 \end{bmatrix} \\
+u = \frac{a}{c}, \qquad v = \frac{b}{c}
+\end{gathered}
 ```
 
 Die Division durch `c` ist die Perspektive: Entferntes wirkt klein. `P`
@@ -64,9 +59,18 @@ Das Kamerazentrum `C` ist der einzige Punkt mit `P * [C, 1] = 0`, also
 Für Punkte auf dem Boden gilt `Z = 0`, daher wird die dritte Spalte von `P`
 mit null multipliziert und fällt weg:
 
-```text
- P = [ p1  p2  p3  p4 ]          (four columns)
- floor point (X, Y, 0):  P * [X, Y, 0, 1] = [ p1 p2 p4 ] * [X, Y, 1] = H * [X, Y, 1]
+```{math}
+P = \begin{bmatrix} p_1 & p_2 & p_3 & p_4 \end{bmatrix}
+```
+
+{math}`p_1, \dots, p_4` sind die vier Spalten von {math}`P`.
+
+```{math}
+\begin{aligned}
+P \begin{bmatrix} X \\ Y \\ 0 \\ 1 \end{bmatrix}
+&= \begin{bmatrix} p_1 & p_2 & p_4 \end{bmatrix} \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix} \\
+&= H \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix}
+\end{aligned}
 ```
 
 Die 3x3-Matrix `H = [p1 p2 p4]` ist eine **Homographie**. Sie wird aus Ihren
@@ -112,13 +116,18 @@ Boden liegen: normalerweise die beiden Netzpfostenspitzen bei `Z = 1.55`. Für
 einen Anker bei `(X, Y, Z)`, gesehen bei `(u, v)`, schreibt man
 `q = H * [X, Y, 1]`. Die Projektionsbedingung wird linear in `p3`:
 
-```text
- u * (q3 + Z * p3_3) = q1 + Z * p3_1
- v * (q3 + Z * p3_3) = q2 + Z * p3_2
+```{math}
+\begin{aligned}
+u \, (q_3 + Z \, p_{3,3}) &= q_1 + Z \, p_{3,1} \\
+v \, (q_3 + Z \, p_{3,3}) &= q_2 + Z \, p_{3,2}
+\end{aligned}
+```
 
- rearranged per anchor:
-   [ Z  0  -u*Z ] * p3 = u*q3 - q1
-   [ 0  Z  -v*Z ] * p3 = v*q3 - q2
+Je Anker umgestellt:
+
+```{math}
+\begin{bmatrix} Z & 0 & -u Z \\ 0 & Z & -v Z \end{bmatrix} p_3
+= \begin{bmatrix} u \, q_3 - q_1 \\ v \, q_3 - q_2 \end{bmatrix}
 ```
 
 [`camera_from_anchors`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/calibration.py#L81-L92)

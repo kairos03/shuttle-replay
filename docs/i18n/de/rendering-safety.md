@@ -13,9 +13,12 @@ die Quelle, nimmt den ersten Videostream und, falls vorhanden, den ersten
 Audiostream und demultiplext ihre Pakete in Dateireihenfolge
 ([`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279)).
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/de/render-pipeline.svg
+:alt: Render-Pipeline: source.mp4 wird demultiplext; Videopakete werden zu Frame k dekodiert, geprüft, gezeichnet und nach staging.mp4 kodiert; Audio wird kopiert
+:class: technical-figure
+:width: 100%
+
+Weg jedes Frames von den Quellpaketen zur Staging-Datei.
 ```
 
 Für jeden decodierten Videoframe `k` prüft er vor dem Zeichnen, dass:
@@ -48,13 +51,12 @@ A/V-Versatz
 
 ## Layout
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/de/render-layout.svg
+:alt: Layout 6:4: links das unskalierte Quellbild (W x H); rechts die Draufsicht, Spielfeld auf 4/6 W Breite eingepasst
+:class: technical-figure
+:width: 100%
+
+Ausgabeframe: Quellbereich und Draufsicht im Breitenverhältnis 6:4.
 ```
 
 `W` und `H` sind Breite und Höhe der Quelle, auf gerade Zahlen aufgerundet

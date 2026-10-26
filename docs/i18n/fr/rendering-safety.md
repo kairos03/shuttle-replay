@@ -13,9 +13,12 @@ rendu ouvre la source, prend le premier flux vidéo et, s'il existe, le premier
 flux audio, et démultiplexe leurs paquets dans l'ordre du fichier
 ([`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279)).
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/fr/render-pipeline.svg
+:alt: Pipeline de rendu : source.mp4 est démultiplexé ; les paquets vidéo sont décodés en image k, vérifiés, dessinés et encodés dans staging.mp4 ; l'audio est copié
+:class: technical-figure
+:width: 100%
+
+Chemin de chaque image, des paquets source au fichier intermédiaire.
 ```
 
 Pour chaque image vidéo décodée `k`, avant de dessiner, il vérifie que :
@@ -46,13 +49,12 @@ décodé
 
 ## Mise en page
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/fr/render-layout.svg
+:alt: Disposition 6:4 : à gauche l'image source non mise à l'échelle (W x H) ; à droite la vue de dessus, terrain ajusté à 4/6 W
+:class: technical-figure
+:width: 100%
+
+Image de sortie : panneau source et vue de dessus en rapport de largeur 6:4.
 ```
 
 `W` et `H` sont la largeur et la hauteur de la source arrondies au nombre pair

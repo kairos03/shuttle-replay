@@ -4,17 +4,12 @@
 
 ## 데이터 흐름
 
-```text
- source video (local file) ----------------------------------------+
-                                                                   |
- calibration input JSON --> calibrate --> calibration JSON         |
- (ground points + net anchors)              (P, H, errors)         |
-                                                 |                 |
- tracks JSON (your detections, PTS) -------------+                 |
- review JSON (contacts, flight ends) ------------+                 |
-                                                 v                 v
-                                       analyze --> analysis JSON --> render --> replay MP4
-                                                                         +--> render report JSON
+```{figure} assets/technical/ko/pipeline.svg
+:alt: 데이터 흐름: 캘리브레이션, 트랙, 리뷰가 analyze로, 영상과 분석 결과가 render로 들어가 리플레이 MP4와 렌더 보고서를 만든다
+:class: technical-figure
+:width: 100%
+
+세 명령의 입력과 출력.
 ```
 
 CLI는 각 화살표를 명령으로 제공합니다. `calibrate`, `analyze`, `render`, 그리고 `run`(analyze와 render를 한 번에 수행)입니다. `demo`는 완전히 합성된 장면을 만들고 그 위에서 같은 파이프라인을 실행합니다([`cli.py` `build_parser`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/cli.py#L154-L191)). `run`에서는 `analysis.json`과 `render_report.json`을 쓰기 전에 영상을 렌더링하고 검증합니다. 따라서 JSON 결과가 실패한 영상을 설명하는 일은 없습니다([`_run_pipeline`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/cli.py#L55-L63)).

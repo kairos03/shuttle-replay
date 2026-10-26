@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="ru" width="520" height="646" viewBox="0 0 520 646" role="img" aria-labelledby="title desc" font-family="&#x27;Noto Sans&#x27;, &#x27;Segoe UI&#x27;, Helvetica, Arial, sans-serif">
+<title id="title">Поток данных от проверенных входов до повтора</title>
+<desc id="desc">Входной JSON калибровки проходит через calibrate и даёт JSON калибровки. JSON калибровки, tracks JSON и review JSON поступают в analyze, который записывает JSON анализа. Исходное видео и JSON анализа поступают в render, который записывает MP4 повтора и JSON-отчёт рендеринга. Команда run выполняет analyze и render за один шаг.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#20312b"/></marker></defs>
+<rect x="0.5" y="0.5" width="519" height="645" rx="6" fill="#fbfbf8" stroke="#dfe5e1" stroke-width="1"/>
+<text x="260" y="30" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">Поток данных от проверенных входов до</text>
+<text x="260" y="53.4" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">повтора</text>
+<rect x="20" y="75.5" width="146" height="103.7" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="95.8" font-size="14" text-anchor="middle" fill="#20312b">входной JSON</text>
+<text x="93" y="113.3" font-size="14" text-anchor="middle" fill="#20312b">калибровки</text>
+<text x="93" y="135.2" font-size="13" text-anchor="middle" fill="#5d6b65">точки на полу +</text>
+<text x="93" y="152.1" font-size="13" text-anchor="middle" fill="#5d6b65">опорные точки</text>
+<text x="93" y="169" font-size="13" text-anchor="middle" fill="#5d6b65">сетки</text>
+<rect x="354" y="75.5" width="146" height="103.7" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="427" y="121.45" font-size="14" text-anchor="middle" fill="#20312b">JSON калибровки</text>
+<text x="427" y="143.35" font-size="13" text-anchor="middle" fill="#5d6b65">P, H, ошибки</text>
+<rect x="198" y="108.35" width="124" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="260" y="131.9" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">calibrate</text>
+<line x1="166" y1="127.35" x2="198" y2="127.35" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<line x1="322" y1="127.35" x2="354" y2="127.35" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="20" y="209.2" width="146" height="69.3" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="229.5" font-size="14" text-anchor="middle" fill="#20312b">tracks JSON</text>
+<text x="93" y="251.4" font-size="13" text-anchor="middle" fill="#5d6b65">ваши детекции,</text>
+<text x="93" y="268.3" font-size="13" text-anchor="middle" fill="#5d6b65">PTS</text>
+<rect x="187" y="209.2" width="146" height="69.3" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="260" y="229.5" font-size="14" text-anchor="middle" fill="#20312b">review JSON</text>
+<text x="260" y="251.4" font-size="13" text-anchor="middle" fill="#5d6b65">касания, концы</text>
+<text x="260" y="268.3" font-size="13" text-anchor="middle" fill="#5d6b65">полётов</text>
+<rect x="198" y="308.5" width="124" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="260" y="332.05" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">analyze</text>
+<line x1="260" y1="278.5" x2="260" y2="308.5" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<polyline points="93,278.5 93,327.5 198,327.5" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<polyline points="427,179.2 427,327.5 322,327.5" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="20" y="376.5" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="396.8" font-size="14" text-anchor="middle" fill="#20312b">исходное видео</text>
+<text x="93" y="418.7" font-size="13" text-anchor="middle" fill="#5d6b65">локальный файл</text>
+<rect x="187" y="376.5" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="260" y="407.25" font-size="14" text-anchor="middle" fill="#20312b">JSON анализа</text>
+<line x1="260" y1="346.5" x2="260" y2="376.5" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="198" y="458.9" width="124" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="260" y="482.45" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">render</text>
+<line x1="260" y1="428.9" x2="260" y2="458.9" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<polyline points="93,428.9 93,477.9 198,477.9" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="20" y="532.9" width="146" height="49" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="561.95" font-size="14" text-anchor="middle" fill="#20312b">MP4 повтора</text>
+<rect x="354" y="532.9" width="146" height="49" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="427" y="553.2" font-size="14" text-anchor="middle" fill="#20312b">JSON-отчёт</text>
+<text x="427" y="570.7" font-size="14" text-anchor="middle" fill="#20312b">рендеринга</text>
+<line x1="260" y1="496.9" x2="260" y2="514.9" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt"/>
+<polyline points="260,514.9 93,514.9 93,532.9" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<polyline points="260,514.9 427,514.9 427,532.9" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="174" y="296.5" width="172" height="212.4" rx="10" fill="none" stroke="#ce7317" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="306" y="287.5" width="36" height="18" rx="0" fill="#fbfbf8" stroke="none" stroke-width="1"/>
+<text x="324" y="301.5" font-size="13" text-anchor="middle" fill="#ce7317" font-weight="bold">run</text>
+<text x="260" y="603.9" font-size="13" text-anchor="middle" fill="#5d6b65">run = analyze + render; видео проверяется до записи файлов JSON</text>
+<rect x="145.46" y="616.75" width="28" height="16" rx="3" fill="#ffffff" stroke="#20312b" stroke-width="1.2"/>
+<text x="181.46" y="629.75" font-size="13" text-anchor="start" fill="#20312b">файл</text>
+<rect x="237.7" y="616.75" width="28" height="16" rx="8" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="273.7" y="629.75" font-size="13" text-anchor="start" fill="#20312b">команда CLI</text>
+</svg>

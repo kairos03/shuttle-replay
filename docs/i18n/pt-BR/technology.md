@@ -9,17 +9,12 @@ no commit `6e9a060b5cc964f02d4017d806e953ffea89c8b4`.
 
 ## Fluxo de dados
 
-```text
- source video (local file) ----------------------------------------+
-                                                                   |
- calibration input JSON --> calibrate --> calibration JSON         |
- (ground points + net anchors)              (P, H, errors)         |
-                                                 |                 |
- tracks JSON (your detections, PTS) -------------+                 |
- review JSON (contacts, flight ends) ------------+                 |
-                                                 v                 v
-                                       analyze --> analysis JSON --> render --> replay MP4
-                                                                         +--> render report JSON
+```{figure} assets/technical/pt-BR/pipeline.svg
+:alt: Fluxo de dados: calibração, trilhas e revisão alimentam analyze; vídeo e análise alimentam render, que grava o MP4 e um relatório
+:class: technical-figure
+:width: 100%
+
+Entradas e saídas dos três comandos.
 ```
 
 A CLI expõe cada seta como um comando: `calibrate`, `analyze`, `render` e

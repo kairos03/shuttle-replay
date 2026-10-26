@@ -6,9 +6,12 @@
 
 PyAV는 Python 프로세스 안에서 FFmpeg 라이브러리를 감쌉니다. 렌더러는 원본을 열고, 첫 번째 비디오 스트림과 (있다면) 첫 번째 오디오 스트림을 가져와 파일 순서대로 패킷을 디먹싱합니다([`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279)).
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/ko/render-pipeline.svg
+:alt: 렌더 파이프라인: source.mp4를 디먹스하고, 비디오 패킷은 프레임 k로 디코드해 검사, 그리기, staging.mp4 인코드를 거치며, 오디오 패킷은 복사한다
+:class: technical-figure
+:width: 100%
+
+소스 패킷에서 스테이징 파일까지 프레임별 경로.
 ```
 
 디코딩된 모든 비디오 프레임 `k`에 대해, 그리기 전에 다음을 확인합니다.
@@ -25,13 +28,12 @@ PyAV는 Python 프로세스 안에서 FFmpeg 라이브러리를 감쌉니다. �
 
 ## 레이아웃
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/ko/render-layout.svg
+:alt: 출력 레이아웃 6:4: 왼쪽은 크기 변경 없는 소스 프레임(W x H), 오른쪽은 코트를 폭 4/6 W에 맞춘 탑뷰
+:class: technical-figure
+:width: 100%
+
+출력 프레임: 소스 패널과 탑뷰의 폭 비율은 6:4.
 ```
 
 `W`와 `H`는 원본의 너비와 높이를 짝수로 올림한 값입니다(H.264는 짝수 크기가 필요합니다). 위에서 본 화면의 너비는 `2 * round(W * 4 / 6 / 2)`입니다. 원본 프레임은 배율 1.0으로 왼쪽 위 모서리에 붙여지며, 올림 때문에 검은 픽셀 행이나 열이 최대 하나 추가됩니다. 위에서 본 화면([`TopView`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L49-L69))은 6.10 x 13.40 m 코트를 여백을 두고 패널에 맞게 축소하며, 코트의 비율을 유지합니다.

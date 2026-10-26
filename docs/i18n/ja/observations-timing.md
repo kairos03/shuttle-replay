@@ -6,10 +6,17 @@
 
 動画コンテナは、各フレームの表示タイムスタンプ(PTS)を整数のティック数として保存し、1 ティックの長さを表す `time_base` を併せて持ちます。フレームの秒単位の時刻は次のとおりです。
 
-```text
- time_s = pts * time_base
+```{math}
+\mathrm{time\_s} = \mathrm{pts} \cdot \mathrm{time\_base}
+```
 
- example: time_base = 1/30000 s, pts = 3003  ->  0.1001 s
+例：
+
+```{math}
+\begin{aligned}
+\mathrm{time\_base} &= \tfrac{1}{30000}\ \mathrm{s}, \quad \mathrm{pts} = 3003 \\
+\Rightarrow \mathrm{time\_s} &= 3003 \cdot \tfrac{1}{30000}\ \mathrm{s} = 0.1001\ \mathrm{s}
+\end{aligned}
 ```
 
 スマートフォンの動画や画面録画の多くは**可変フレームレート**(VFR)で、フレームの長さがまちまちです。この場合、`frame_index / fps` で計算すると実際の時刻から徐々にずれていきます。そのためトラック形式は、FFmpeg/PyAV がデコードした `pts_s` をフレームごとに保存します([スキーマ](schemas.md)を参照)。合成デモは意図的に VFR を使っています。`time_base` 1/30000 s で、7 フレームごとに 1 フレームが 1000 ティックではなく 1001 ティック続きます([`frame_pts_ticks`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/synthetic.py#L52-L58))。
@@ -48,14 +55,21 @@
 
 [`analyze`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L154-L234) は打球時点を区間ごとにまとめ、各打球時点を 1 つの飛行にします。飛行がカメラ区間をまたぐことはありません。飛行の観測は、検出があり、かつ次の条件を満たす区間内のフレームです。
 
-```text
- t0 + contact_guard_s  <  pts_s  <=  t_end - contact_guard_s     (followed by another contact)
- t0 + contact_guard_s  <  pts_s  <=  t_end                       (landing or open end)
-
- t0             reviewed contact time
- t_end          next contact time, landing bracket end, or min(segment end, until_s)
- contact_guard_s  default 0.02 s
+```{math}
+\begin{aligned}
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} - \mathtt{contact\_guard\_s} && (1) \\
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} && (2)
+\end{aligned}
 ```
+
+(1) 飛行の後に別の接触が続く場合。
+(2) 着地またはオープンエンドの場合。
+
+| 記号 | 意味 |
+|---|---|
+| {math}`t_0` | レビュー済みの接触時刻 |
+| {math}`t_\mathrm{end}` | 次の接触時刻、着地区間の終端、または min(セグメント終端, `until_s`) |
+| `contact_guard_s` | 既定値 0.02 s |
 
 ガードは、シャトルがラケットと重なって見えやすい打球直後の検出を除外します。各飛行レコードの `observation_frame_ids` と `observation_time_offsets_s` は、どのフレームが使われたかを正確に示し、オフセットは `t0` から測られます。
 
@@ -69,14 +83,14 @@
 
 ## 実際に検査される許容誤差
 
-```text
- contact bracket width         <= 0.5 s                  inputs.py
- contact guard                 0.02 s (default)          analysis.py
- renderer PTS match            1e-3 s per frame          render.py
- ODE (simulate)                rtol 1e-7, atol 1e-8, max_step 0.02 s
- ODE (floor_crossing)          rtol 1e-9, atol 1e-10, max_step 0.01 s
- floor gate                    lowest point >= -0.02 m
- landing within_region         region widened by 1e-3 m
-```
+| チェック | 値 | ソース |
+|---|---|---|
+| 接触区間の幅 | ≤ 0.5 s | `inputs.py` |
+| 接触ガード | 0.02 s （既定値） | `analysis.py` |
+| レンダラーの PTS 一致 | 1e-3 s フレームごと | `render.py` |
+| ODE (`simulate`) | rtol 1e-7, atol 1e-8, max_step 0.02 s | `physics.py` |
+| ODE (`floor_crossing`) | rtol 1e-9, atol 1e-10, max_step 0.01 s | `physics.py` |
+| 床ゲート | 最低点 ≥ -0.02 m | `physics.py` |
+| 着地 `within_region` | 領域を 1e-3 m 拡張 | `analysis.py` |
 
 関連: すべてのフィールドについては[スキーマ](schemas.md)、独自の検出器からトラックを作る方法については[ワークフロー](workflow.md)を参照してください。

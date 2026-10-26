@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="zh" width="520" height="511" viewBox="0 0 520 511" role="img" aria-labelledby="title desc" font-family="&#x27;Noto Sans SC&#x27;, &#x27;PingFang SC&#x27;, &#x27;Microsoft YaHei&#x27;, &#x27;Noto Sans CJK SC&#x27;, sans-serif">
+<title id="title">合成飞行：高度与水平距离</title>
+<desc id="desc">两条曲线均由软件包的 simulate 函数从同一选定初始状态模拟得到。k = 0.18 1/m 的阻力模型在 1.56 s 后、水平距离 8.33 m 处首次触地，穿过球网平面时高度为 4.01 m。无阻力（k = 0）时，同一起点在 1.90 s 后、26.60 m 处触地。两条曲线都在各自首次下降触地处截止。这是选定的示例，不是测量，也不是拟合。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#20312b"/></marker></defs>
+<rect x="0.5" y="0.5" width="519" height="510" rx="6" fill="#fbfbf8" stroke="#dfe5e1" stroke-width="1"/>
+<text x="260" y="30" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">合成飞行：高度与水平距离</text>
+<rect x="176.5" y="46.1" width="167" height="26.9" rx="13.45" fill="#fff4e8" stroke="#ce7317" stroke-width="1"/>
+<text x="260" y="63.45" font-size="13" text-anchor="middle" fill="#8a4a0c">合成示例，并非实测数据</text>
+<line x1="70" y1="101" x2="70" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="70" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">0</text>
+<line x1="140" y1="101" x2="140" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="140" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">5</text>
+<line x1="210" y1="101" x2="210" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="210" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">10</text>
+<line x1="280" y1="101" x2="280" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="280" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">15</text>
+<line x1="350" y1="101" x2="350" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="350" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">20</text>
+<line x1="420" y1="101" x2="420" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="420" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">25</text>
+<line x1="490" y1="101" x2="490" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="490" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">30</text>
+<line x1="70" y1="351" x2="490" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="355.5" font-size="13" text-anchor="end" fill="#5d6b65">0</text>
+<line x1="70" y1="288.5" x2="490" y2="288.5" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="293" font-size="13" text-anchor="end" fill="#5d6b65">2</text>
+<line x1="70" y1="226" x2="490" y2="226" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="230.5" font-size="13" text-anchor="end" fill="#5d6b65">4</text>
+<line x1="70" y1="163.5" x2="490" y2="163.5" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="168" font-size="13" text-anchor="end" fill="#5d6b65">6</text>
+<line x1="70" y1="101" x2="490" y2="101" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="105.5" font-size="13" text-anchor="end" fill="#5d6b65">8</text>
+<line x1="70" y1="351" x2="490" y2="351" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<line x1="70" y1="101" x2="70" y2="351" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="280" y="389" font-size="13" text-anchor="middle" fill="#20312b">距起点的水平距离 (m)</text>
+<g transform="rotate(-90 30 226)">
+<text x="30" y="226" font-size="13" text-anchor="middle" fill="#20312b">高度 Z (m)</text>
+</g>
+<line x1="70" y1="351" x2="232.44" y2="351" stroke="#1f6b45" stroke-width="6" stroke-linecap="butt"/>
+<line x1="232.44" y1="339" x2="232.44" y2="355" stroke="#1f6b45" stroke-width="2" stroke-linecap="butt"/>
+<text x="236.44" y="335" font-size="13" text-anchor="start" fill="#1f6b45">远端底线</text>
+<line x1="138.62" y1="351" x2="138.62" y2="303.38" stroke="#1f6b45" stroke-width="4" stroke-linecap="butt"/>
+<text x="132.62" y="313.38" font-size="13" text-anchor="end" fill="#1f6b45">球网</text>
+<text x="132.62" y="328.38" font-size="13" text-anchor="end" fill="#1f6b45">1.524 m</text>
+<polyline points="70,272.88 73.1,268.96 76.21,265.11 79.31,261.35 82.41,257.66 85.51,254.05 88.62,250.52 91.72,247.06 94.82,243.68 97.93,240.37 101.03,237.15 104.13,233.99 107.24,230.92 110.34,227.92 113.44,225 116.54,222.16 119.65,219.39 122.75,216.7 125.85,214.09 128.96,211.56 132.06,209.1 135.16,206.71 138.27,204.41 141.37,202.18 144.47,200.03 147.57,197.95 150.68,195.95 153.78,194.03 156.88,192.19 159.99,190.42 163.09,188.73 166.19,187.11 169.29,185.57 172.4,184.11 175.5,182.73 178.6,181.42 181.71,180.19 184.81,179.04 187.91,177.96 191.02,176.96 194.12,176.04 197.22,175.19 200.32,174.42 203.43,173.73 206.53,173.11 209.63,172.57 212.74,172.11 215.84,171.72 218.94,171.41 222.05,171.18 225.15,171.03 228.25,170.95 231.35,170.95 234.46,171.02 237.56,171.17 240.66,171.4 243.77,171.71 246.87,172.09 249.97,172.55 253.07,173.09 256.18,173.7 259.28,174.39 262.38,175.15 265.49,176 268.59,176.92 271.69,177.91 274.8,178.99 277.9,180.14 281,181.36 284.1,182.67 287.21,184.05 290.31,185.51 293.41,187.04 296.52,188.65 299.62,190.34 302.72,192.1 305.83,193.94 308.93,195.86 312.03,197.86 315.13,199.93 318.24,202.08 321.34,204.3 324.44,206.61 327.55,208.99 330.65,211.44 333.75,213.97 336.85,216.58 339.96,219.27 343.06,222.03 346.16,224.87 349.27,227.79 352.37,230.78 355.47,233.85 358.58,237 361.68,240.22 364.78,243.52 367.88,246.9 370.99,250.36 374.09,253.89 377.19,257.49 380.3,261.18 383.4,264.94 386.5,268.78 389.61,272.69 392.71,276.69 395.81,280.75 398.91,284.9 402.02,289.12 405.12,293.42 408.22,297.8 411.33,302.25 414.43,306.78 417.53,311.39 420.63,316.07 423.74,320.83 426.84,325.66 429.94,330.58 433.05,335.57 436.15,340.64 439.25,345.78 442.36,351" fill="none" stroke="#5d6b65" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 5"/>
+<polyline points="70,272.88 72.5,269.71 74.92,266.7 77.25,263.85 79.51,261.15 81.69,258.58 83.81,256.14 85.86,253.83 87.85,251.63 89.79,249.55 91.68,247.57 93.52,245.7 95.31,243.92 97.06,242.24 98.76,240.65 100.43,239.15 102.06,237.73 103.65,236.4 105.21,235.14 106.74,233.97 108.24,232.86 109.7,231.84 111.14,230.88 112.55,229.99 113.94,229.17 115.29,228.42 116.63,227.73 117.94,227.1 119.23,226.54 120.5,226.04 121.75,225.6 122.98,225.21 124.19,224.88 125.38,224.61 126.55,224.4 127.71,224.24 128.84,224.13 129.97,224.08 131.07,224.08 132.16,224.13 133.24,224.23 134.3,224.38 135.34,224.59 136.38,224.84 137.39,225.13 138.4,225.48 139.39,225.87 140.37,226.31 141.34,226.8 142.29,227.33 143.24,227.91 144.17,228.53 145.09,229.19 146,229.9 146.89,230.65 147.78,231.44 148.65,232.28 149.52,233.16 150.37,234.07 151.22,235.03 152.05,236.03 152.87,237.07 153.69,238.14 154.49,239.26 155.29,240.41 156.07,241.6 156.85,242.83 157.61,244.1 158.37,245.4 159.11,246.73 159.85,248.1 160.58,249.51 161.3,250.95 162.01,252.43 162.71,253.93 163.41,255.47 164.09,257.05 164.77,258.65 165.44,260.29 166.09,261.95 166.74,263.65 167.39,265.38 168.02,267.13 168.65,268.92 169.26,270.73 169.87,272.57 170.48,274.44 171.07,276.34 171.65,278.26 172.23,280.21 172.8,282.18 173.37,284.18 173.92,286.2 174.47,288.25 175.01,290.32 175.54,292.41 176.07,294.53 176.58,296.67 177.09,298.83 177.6,301.01 178.09,303.21 178.58,305.43 179.07,307.68 179.54,309.94 180.01,312.22 180.47,314.52 180.93,316.84 181.38,319.17 181.82,321.53 182.25,323.9 182.68,326.29 183.11,328.69 183.52,331.11 183.93,333.55 184.34,336 184.74,338.46 185.13,340.94 185.51,343.44 185.9,345.94 186.27,348.47 186.64,351" fill="none" stroke="#ce7317" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70" cy="272.88" r="4" fill="#20312b" stroke="none" stroke-width="1"/>
+<line x1="181.64" y1="346" x2="191.64" y2="356" stroke="#ce7317" stroke-width="2.2" stroke-linecap="butt"/>
+<line x1="181.64" y1="356" x2="191.64" y2="346" stroke="#ce7317" stroke-width="2.2" stroke-linecap="butt"/>
+<line x1="437.36" y1="346" x2="447.36" y2="356" stroke="#5d6b65" stroke-width="2.2" stroke-linecap="butt"/>
+<line x1="437.36" y1="356" x2="447.36" y2="346" stroke="#5d6b65" stroke-width="2.2" stroke-linecap="butt"/>
+<line x1="64" y1="417" x2="98" y2="417" stroke="#ce7317" stroke-width="2.6" stroke-linecap="butt"/>
+<text x="108" y="421" font-size="13" text-anchor="start" fill="#20312b">阻力模型，k = 0.18 1/m</text>
+<text x="108" y="438.85" font-size="13" text-anchor="start" fill="#ce7317">触地: 1.56 s, 8.33 m</text>
+<line x1="64" y1="450.7" x2="98" y2="450.7" stroke="#5d6b65" stroke-width="2.6" stroke-linecap="butt" stroke-dasharray="7 5"/>
+<text x="108" y="454.7" font-size="13" text-anchor="start" fill="#20312b">无阻力，k = 0（仅作对比）</text>
+<text x="108" y="472.55" font-size="13" text-anchor="start" fill="#5d6b65">触地: 1.90 s, 26.60 m</text>
+<text x="260" y="494.4" font-size="13" text-anchor="middle" fill="#5d6b65">选定的初始状态，用 simulate() 模拟；不是测量或拟合。</text>
+</svg>

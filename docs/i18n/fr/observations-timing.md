@@ -13,10 +13,17 @@ Les conteneurs vidéo stockent pour chaque image un horodatage de présentation
 (PTS) sous forme de nombre entier de ticks, avec un `time_base` qui indique la
 durée d'un tick. L'instant de l'image en secondes est :
 
-```text
- time_s = pts * time_base
+```{math}
+\mathrm{time\_s} = \mathrm{pts} \cdot \mathrm{time\_base}
+```
 
- example: time_base = 1/30000 s, pts = 3003  ->  0.1001 s
+Exemple :
+
+```{math}
+\begin{aligned}
+\mathrm{time\_base} &= \tfrac{1}{30000}\ \mathrm{s}, \quad \mathrm{pts} = 3003 \\
+\Rightarrow \mathrm{time\_s} &= 3003 \cdot \tfrac{1}{30000}\ \mathrm{s} = 0.1001\ \mathrm{s}
+\end{aligned}
 ```
 
 Beaucoup d'enregistrements de téléphone et d'écran ont une **fréquence
@@ -95,14 +102,21 @@ regroupe les contacts par segment et transforme chaque contact en un vol. Un
 vol ne traverse jamais un segment de caméra. Ses observations sont les images
 du segment comportant une détection et telles que
 
-```text
- t0 + contact_guard_s  <  pts_s  <=  t_end - contact_guard_s     (followed by another contact)
- t0 + contact_guard_s  <  pts_s  <=  t_end                       (landing or open end)
-
- t0             reviewed contact time
- t_end          next contact time, landing bracket end, or min(segment end, until_s)
- contact_guard_s  default 0.02 s
+```{math}
+\begin{aligned}
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} - \mathtt{contact\_guard\_s} && (1) \\
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} && (2)
+\end{aligned}
 ```
+
+(1) le vol est suivi d'un autre contact ;
+(2) atterrissage ou fin ouverte.
+
+| Symbole | Signification |
+|---|---|
+| {math}`t_0` | instant de contact revu |
+| {math}`t_\mathrm{end}` | instant du contact suivant, fin de l'intervalle d'atterrissage ou min(fin de segment, `until_s`) |
+| `contact_guard_s` | 0,02 s par défaut |
 
 La garde écarte les détections juste au moment du contact, où le volant est
 souvent confondu avec la raquette. `observation_frame_ids` et
@@ -134,15 +148,15 @@ image vidéo :
 
 ## Tolérances réellement contrôlées
 
-```text
- contact bracket width         <= 0.5 s                  inputs.py
- contact guard                 0.02 s (default)          analysis.py
- renderer PTS match            1e-3 s per frame          render.py
- ODE (simulate)                rtol 1e-7, atol 1e-8, max_step 0.02 s
- ODE (floor_crossing)          rtol 1e-9, atol 1e-10, max_step 0.01 s
- floor gate                    lowest point >= -0.02 m
- landing within_region         region widened by 1e-3 m
-```
+| Contrôle | Valeur | Source |
+|---|---|---|
+| largeur de l'intervalle de contact | ≤ 0.5 s | `inputs.py` |
+| marge de contact | 0.02 s (par défaut) | `analysis.py` |
+| correspondance PTS du rendu | 1e-3 s par image | `render.py` |
+| ODE (`simulate`) | rtol 1e-7, atol 1e-8, max_step 0.02 s | `physics.py` |
+| ODE (`floor_crossing`) | rtol 1e-9, atol 1e-10, max_step 0.01 s | `physics.py` |
+| seuil du sol | point le plus bas ≥ -0.02 m | `physics.py` |
+| atterrissage `within_region` | région élargie de 1e-3 m | `analysis.py` |
 
 Voir aussi : [les schémas](schemas.md) pour chaque champ,
 [le flux de travail](workflow.md) pour produire des pistes avec votre propre

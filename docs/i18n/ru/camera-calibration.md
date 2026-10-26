@@ -15,17 +15,12 @@
 размерами корта BWF
 ([`court.py`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/court.py#L1-L24)):
 
-```text
-      X = 0                X = 6.10
- Y = 0  +--------------------+   far baseline (outer edge)
-        |                    |
-        |                    |
- Y=6.70 |====== net =========|   net plane; posts 1.55 m, centre 1.524 m
-        |                    |
-        |                    |
-Y=13.40 +--------------------+   near baseline (outer edge)
+```{figure} assets/technical/ru/court.svg
+:alt: Модель корта: X от 0 до 6,10 м, Y от 0 (дальняя задняя линия) до 13,40 м (ближняя), плоскость сетки Y = 6,70 м, стойки 1,55 м, центр 1,524 м, Z вверх от покрытия
+:class: technical-figure
+:width: 100%
 
- Z is up; Z = 0 is the court surface.
+Координаты корта в метрах; Z направлена вверх, Z = 0 — поверхность корта.
 ```
 
 Линии имеют ширину 40 мм, и точки калибровки используют **центры линий**:
@@ -39,11 +34,11 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 Камера-обскура отображает мировую точку в пиксель матрицей 3x4 `P`:
 
-```text
- [a]       [X]
- [b] = P * [Y]        u = a / c ,  v = b / c
- [c]       [Z]
-           [1]
+```{math}
+\begin{gathered}
+\begin{bmatrix} a \\ b \\ c \end{bmatrix} = P \begin{bmatrix} X \\ Y \\ Z \\ 1 \end{bmatrix} \\
+u = \frac{a}{c}, \qquad v = \frac{b}{c}
+\end{gathered}
 ```
 
 Деление на `c` даёт перспективу: далёкие предметы выглядят маленькими. `P`
@@ -60,9 +55,18 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 Для точек на полу `Z = 0`, поэтому третий столбец `P` умножается на ноль и
 выпадает:
 
-```text
- P = [ p1  p2  p3  p4 ]          (four columns)
- floor point (X, Y, 0):  P * [X, Y, 0, 1] = [ p1 p2 p4 ] * [X, Y, 1] = H * [X, Y, 1]
+```{math}
+P = \begin{bmatrix} p_1 & p_2 & p_3 & p_4 \end{bmatrix}
+```
+
+{math}`p_1, \dots, p_4` — четыре столбца {math}`P`.
+
+```{math}
+\begin{aligned}
+P \begin{bmatrix} X \\ Y \\ 0 \\ 1 \end{bmatrix}
+&= \begin{bmatrix} p_1 & p_2 & p_4 \end{bmatrix} \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix} \\
+&= H \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix}
+\end{aligned}
 ```
 
 Матрица 3x3 `H = [p1 p2 p4]` является **гомографией**. Она подгоняется по
@@ -104,13 +108,18 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 стоек сетки при `Z = 1.55`. Для якоря в `(X, Y, Z)`, видимого в `(u, v)`,
 запишем `q = H * [X, Y, 1]`. Условие проекции становится линейным по `p3`:
 
-```text
- u * (q3 + Z * p3_3) = q1 + Z * p3_1
- v * (q3 + Z * p3_3) = q2 + Z * p3_2
+```{math}
+\begin{aligned}
+u \, (q_3 + Z \, p_{3,3}) &= q_1 + Z \, p_{3,1} \\
+v \, (q_3 + Z \, p_{3,3}) &= q_2 + Z \, p_{3,2}
+\end{aligned}
+```
 
- rearranged per anchor:
-   [ Z  0  -u*Z ] * p3 = u*q3 - q1
-   [ 0  Z  -v*Z ] * p3 = v*q3 - q2
+Для каждой опорной точки после перестановки:
+
+```{math}
+\begin{bmatrix} Z & 0 & -u Z \\ 0 & Z & -v Z \end{bmatrix} p_3
+= \begin{bmatrix} u \, q_3 - q_1 \\ v \, q_3 - q_2 \end{bmatrix}
 ```
 
 [`camera_from_anchors`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/calibration.py#L81-L92)

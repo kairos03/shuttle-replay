@@ -15,17 +15,12 @@ para a direita, `v` cresce para baixo.
 fixado pelas dimensões de quadra da BWF
 ([`court.py`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/court.py#L1-L24)):
 
-```text
-      X = 0                X = 6.10
- Y = 0  +--------------------+   far baseline (outer edge)
-        |                    |
-        |                    |
- Y=6.70 |====== net =========|   net plane; posts 1.55 m, centre 1.524 m
-        |                    |
-        |                    |
-Y=13.40 +--------------------+   near baseline (outer edge)
+```{figure} assets/technical/pt-BR/court.svg
+:alt: Modelo da quadra: X de 0 a 6,10 m, Y de 0 (linha de fundo distante) a 13,40 m (próxima), plano da rede Y = 6,70 m, postes 1,55 m, centro 1,524 m, Z para cima
+:class: technical-figure
+:width: 100%
 
- Z is up; Z = 0 is the court surface.
+Coordenadas da quadra em metros; Z para cima e Z = 0 é a superfície.
 ```
 
 As linhas têm 40 mm de largura e os pontos de calibração usam **os centros das
@@ -40,11 +35,11 @@ Inserir uma borda externa onde se espera um centro desloca esse ponto em 2 cm.
 Uma câmera pinhole mapeia um ponto do mundo para um pixel com uma matriz 3x4
 `P`:
 
-```text
- [a]       [X]
- [b] = P * [Y]        u = a / c ,  v = b / c
- [c]       [Z]
-           [1]
+```{math}
+\begin{gathered}
+\begin{bmatrix} a \\ b \\ c \end{bmatrix} = P \begin{bmatrix} X \\ Y \\ Z \\ 1 \end{bmatrix} \\
+u = \frac{a}{c}, \qquad v = \frac{b}{c}
+\end{gathered}
 ```
 
 A divisão por `c` é a perspectiva: coisas distantes parecem pequenas. `P`
@@ -61,9 +56,18 @@ O centro da câmera `C` é o único ponto com `P * [C, 1] = 0`, então
 Para pontos no piso, `Z = 0`, então a terceira coluna de `P` é multiplicada
 por zero e desaparece:
 
-```text
- P = [ p1  p2  p3  p4 ]          (four columns)
- floor point (X, Y, 0):  P * [X, Y, 0, 1] = [ p1 p2 p4 ] * [X, Y, 1] = H * [X, Y, 1]
+```{math}
+P = \begin{bmatrix} p_1 & p_2 & p_3 & p_4 \end{bmatrix}
+```
+
+{math}`p_1, \dots, p_4` são as quatro colunas de {math}`P`.
+
+```{math}
+\begin{aligned}
+P \begin{bmatrix} X \\ Y \\ 0 \\ 1 \end{bmatrix}
+&= \begin{bmatrix} p_1 & p_2 & p_4 \end{bmatrix} \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix} \\
+&= H \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix}
+\end{aligned}
 ```
 
 A matriz 3x3 `H = [p1 p2 p4]` é uma **homografia**. Ela é ajustada a partir
@@ -105,13 +109,18 @@ normalmente os topos dos dois postes da rede a `Z = 1.55`. Para uma âncora em
 `(X, Y, Z)` vista em `(u, v)`, escreva `q = H * [X, Y, 1]`. A condição de
 projeção se torna linear em `p3`:
 
-```text
- u * (q3 + Z * p3_3) = q1 + Z * p3_1
- v * (q3 + Z * p3_3) = q2 + Z * p3_2
+```{math}
+\begin{aligned}
+u \, (q_3 + Z \, p_{3,3}) &= q_1 + Z \, p_{3,1} \\
+v \, (q_3 + Z \, p_{3,3}) &= q_2 + Z \, p_{3,2}
+\end{aligned}
+```
 
- rearranged per anchor:
-   [ Z  0  -u*Z ] * p3 = u*q3 - q1
-   [ 0  Z  -v*Z ] * p3 = v*q3 - q2
+Reorganizado por âncora:
+
+```{math}
+\begin{bmatrix} Z & 0 & -u Z \\ 0 & Z & -v Z \end{bmatrix} p_3
+= \begin{bmatrix} u \, q_3 - q_1 \\ v \, q_3 - q_2 \end{bmatrix}
 ```
 
 [`camera_from_anchors`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/calibration.py#L81-L92)

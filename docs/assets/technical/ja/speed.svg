@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="ja" width="520" height="511" viewBox="0 0 520 511" role="img" aria-labelledby="title desc" font-family="&#x27;Noto Sans JP&#x27;, &#x27;Hiragino Sans&#x27;, &#x27;Yu Gothic&#x27;, &#x27;Noto Sans CJK JP&#x27;, sans-serif">
+<title id="title">合成した飛行：時間に対する速さ</title>
+<desc id="desc">速さ |v| は同じ 2 つのシミュレーションで積分した速度状態から求めています。抗力あり（k = 0.18 1/m）では、速さは 16.13 m/s から、1.56 s 後の最初の床到達時に 6.56 m/s まで下がります。終端速度 sqrt(g/k) は 7.38 m/s です。抗力なしでは速さは重力だけで変わり、1.90 s 後の床到達時に 17.58 m/s です。選んだ例であり、測定ではありません。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#20312b"/></marker></defs>
+<rect x="0.5" y="0.5" width="519" height="510" rx="6" fill="#fbfbf8" stroke="#dfe5e1" stroke-width="1"/>
+<text x="260" y="30" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">合成した飛行：時間に対する速さ</text>
+<rect x="124.5" y="46.1" width="271" height="26.9" rx="13.45" fill="#fff4e8" stroke="#ce7317" stroke-width="1"/>
+<text x="260" y="63.45" font-size="13" text-anchor="middle" fill="#8a4a0c">合成例であり、実測データではありません</text>
+<line x1="70" y1="101" x2="70" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="70" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">0</text>
+<line x1="175" y1="101" x2="175" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="175" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">0.5</text>
+<line x1="280" y1="101" x2="280" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="280" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">1</text>
+<line x1="385" y1="101" x2="385" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="385" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">1.5</text>
+<line x1="490" y1="101" x2="490" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="490" y="368" font-size="13" text-anchor="middle" fill="#5d6b65">2</text>
+<line x1="70" y1="351" x2="490" y2="351" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="355.5" font-size="13" text-anchor="end" fill="#5d6b65">0</text>
+<line x1="70" y1="288.5" x2="490" y2="288.5" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="293" font-size="13" text-anchor="end" fill="#5d6b65">5</text>
+<line x1="70" y1="226" x2="490" y2="226" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="230.5" font-size="13" text-anchor="end" fill="#5d6b65">10</text>
+<line x1="70" y1="163.5" x2="490" y2="163.5" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="168" font-size="13" text-anchor="end" fill="#5d6b65">15</text>
+<line x1="70" y1="101" x2="490" y2="101" stroke="#dfe5e1" stroke-width="1" stroke-linecap="butt"/>
+<text x="63" y="105.5" font-size="13" text-anchor="end" fill="#5d6b65">20</text>
+<line x1="70" y1="351" x2="490" y2="351" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<line x1="70" y1="101" x2="70" y2="351" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="280" y="389" font-size="13" text-anchor="middle" fill="#20312b">コンタクトからの飛行時間 (s)</text>
+<g transform="rotate(-90 30 226)">
+<text x="30" y="226" font-size="13" text-anchor="middle" fill="#20312b">速さ |v| (m/s)</text>
+</g>
+<line x1="70" y1="258.72" x2="490" y2="258.72" stroke="#367ca5" stroke-width="1.6" stroke-linecap="butt" stroke-dasharray="3 4"/>
+<polyline points="70,149.41 73.32,150.36 76.65,151.31 79.97,152.23 83.3,153.14 86.62,154.04 89.94,154.92 93.27,155.79 96.59,156.64 99.91,157.48 103.24,158.3 106.56,159.1 109.89,159.89 113.21,160.66 116.53,161.41 119.86,162.15 123.18,162.87 126.51,163.57 129.83,164.26 133.15,164.93 136.48,165.58 139.8,166.21 143.12,166.82 146.45,167.41 149.77,167.99 153.1,168.55 156.42,169.09 159.74,169.6 163.07,170.1 166.39,170.58 169.72,171.04 173.04,171.48 176.36,171.91 179.69,172.31 183.01,172.69 186.33,173.05 189.66,173.39 192.98,173.7 196.31,174 199.63,174.28 202.95,174.54 206.28,174.77 209.6,174.99 212.93,175.18 216.25,175.35 219.57,175.5 222.9,175.63 226.22,175.74 229.54,175.83 232.87,175.89 236.19,175.93 239.52,175.96 242.84,175.96 246.16,175.94 249.49,175.89 252.81,175.83 256.14,175.74 259.46,175.64 262.78,175.51 266.11,175.36 269.43,175.19 272.75,175 276.08,174.78 279.4,174.55 282.73,174.29 286.05,174.02 289.37,173.72 292.7,173.4 296.02,173.06 299.34,172.7 302.67,172.32 305.99,171.92 309.32,171.5 312.64,171.06 315.96,170.61 319.29,170.13 322.61,169.63 325.94,169.11 329.26,168.57 332.58,168.02 335.91,167.44 339.23,166.85 342.55,166.24 345.88,165.6 349.2,164.96 352.53,164.29 355.85,163.61 359.17,162.9 362.5,162.18 365.82,161.45 369.15,160.69 372.47,159.92 375.79,159.14 379.12,158.34 382.44,157.52 385.76,156.68 389.09,155.83 392.41,154.96 395.74,154.08 399.06,153.19 402.38,152.27 405.71,151.35 409.03,150.41 412.36,149.45 415.68,148.48 419,147.5 422.33,146.5 425.65,145.49 428.97,144.47 432.3,143.43 435.62,142.38 438.95,141.32 442.27,140.25 445.59,139.16 448.92,138.06 452.24,136.95 455.57,135.83 458.89,134.69 462.21,133.55 465.54,132.39 468.86,131.22" fill="none" stroke="#5d6b65" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 5"/>
+<polyline points="70,149.41 72.73,157.5 75.47,165.02 78.2,172.03 80.93,178.57 83.66,184.68 86.4,190.42 89.13,195.81 91.86,200.88 94.59,205.66 97.33,210.17 100.06,214.44 102.79,218.48 105.52,222.31 108.26,225.94 110.99,229.38 113.72,232.66 116.45,235.77 119.19,238.74 121.92,241.56 124.65,244.25 127.38,246.81 130.12,249.25 132.85,251.58 135.58,253.8 138.31,255.92 141.05,257.94 143.78,259.86 146.51,261.69 149.24,263.43 151.98,265.09 154.71,266.67 157.44,268.17 160.17,269.6 162.91,270.95 165.64,272.23 168.37,273.44 171.1,274.58 173.84,275.66 176.57,276.68 179.3,277.63 182.03,278.53 184.77,279.36 187.5,280.14 190.23,280.86 192.96,281.53 195.7,282.15 198.43,282.72 201.16,283.23 203.89,283.7 206.63,284.12 209.36,284.5 212.09,284.83 214.82,285.12 217.56,285.37 220.29,285.58 223.02,285.76 225.75,285.89 228.49,285.99 231.22,286.06 233.95,286.1 236.68,286.1 239.42,286.08 242.15,286.03 244.88,285.95 247.61,285.85 250.35,285.72 253.08,285.57 255.81,285.4 258.54,285.21 261.28,285 264.01,284.78 266.74,284.54 269.47,284.28 272.21,284.01 274.94,283.73 277.67,283.44 280.4,283.14 283.14,282.82 285.87,282.5 288.6,282.17 291.33,281.84 294.07,281.5 296.8,281.15 299.53,280.8 302.26,280.44 305,280.08 307.73,279.72 310.46,279.36 313.19,279 315.93,278.63 318.66,278.27 321.39,277.9 324.12,277.54 326.86,277.18 329.59,276.82 332.32,276.46 335.05,276.1 337.79,275.74 340.52,275.39 343.25,275.04 345.98,274.7 348.72,274.35 351.45,274.01 354.18,273.68 356.91,273.35 359.65,273.02 362.38,272.7 365.11,272.38 367.85,272.07 370.58,271.76 373.31,271.46 376.04,271.16 378.78,270.86 381.51,270.57 384.24,270.29 386.97,270.01 389.71,269.73 392.44,269.46 395.17,269.2 397.9,268.94" fill="none" stroke="#ce7317" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70" cy="149.41" r="4" fill="#20312b" stroke="none" stroke-width="1"/>
+<text x="78" y="143.41" font-size="13" text-anchor="start" fill="#20312b">16.13 m/s</text>
+<circle cx="397.9" cy="268.94" r="3.6" fill="#ce7317" stroke="none" stroke-width="1"/>
+<text x="391.9" y="288.94" font-size="13" text-anchor="end" fill="#ce7317">6.56 m/s</text>
+<circle cx="468.86" cy="131.22" r="3.6" fill="#5d6b65" stroke="none" stroke-width="1"/>
+<text x="462.86" y="121.22" font-size="13" text-anchor="end" fill="#5d6b65">17.58 m/s</text>
+<line x1="64" y1="417" x2="98" y2="417" stroke="#ce7317" stroke-width="2.6" stroke-linecap="butt"/>
+<text x="108" y="421" font-size="13" text-anchor="start" fill="#20312b">抗力モデル、k = 0.18 1/m</text>
+<line x1="64" y1="432.85" x2="98" y2="432.85" stroke="#5d6b65" stroke-width="2.6" stroke-linecap="butt" stroke-dasharray="7 5"/>
+<text x="108" y="436.85" font-size="13" text-anchor="start" fill="#20312b">抗力なし、k = 0（比較用）</text>
+<line x1="64" y1="448.7" x2="98" y2="448.7" stroke="#367ca5" stroke-width="1.6" stroke-linecap="butt" stroke-dasharray="3 4"/>
+<text x="108" y="452.7" font-size="13" text-anchor="start" fill="#20312b">終端速度 sqrt(g/k) = 7.38 m/s</text>
+<text x="260" y="474.55" font-size="13" text-anchor="middle" fill="#5d6b65">速さは積分した速度状態（solve_ivp）から求めたもので、差分ではありません。</text>
+<text x="260" y="494.4" font-size="13" text-anchor="middle" fill="#5d6b65">選んだ初期状態を simulate() で計算。測定でもフィットでもありません。</text>
+</svg>

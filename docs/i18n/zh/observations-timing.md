@@ -6,10 +6,17 @@
 
 视频容器以整数刻度数为每一帧存储一个显示时间戳（PTS），并用 `time_base` 说明一个刻度有多长。帧的秒级时间为：
 
-```text
- time_s = pts * time_base
+```{math}
+\mathrm{time\_s} = \mathrm{pts} \cdot \mathrm{time\_base}
+```
 
- example: time_base = 1/30000 s, pts = 3003  ->  0.1001 s
+示例：
+
+```{math}
+\begin{aligned}
+\mathrm{time\_base} &= \tfrac{1}{30000}\ \mathrm{s}, \quad \mathrm{pts} = 3003 \\
+\Rightarrow \mathrm{time\_s} &= 3003 \cdot \tfrac{1}{30000}\ \mathrm{s} = 0.1001\ \mathrm{s}
+\end{aligned}
 ```
 
 许多手机录像和录屏是**可变帧率**（VFR）：各帧时长不同。这时用 `frame_index / fps` 计算会逐渐偏离真实时间。因此轨迹格式按帧存储由 FFmpeg/PyAV 解码得到的 `pts_s`（见[数据格式](schemas.md)）。合成演示有意使用 VFR：在 `time_base` 1/30000 s 下，每第七帧持续 1001 个刻度而不是 1000 个（[`frame_pts_ticks`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/synthetic.py#L52-L58)）。
@@ -48,14 +55,21 @@
 
 [`analyze`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L154-L234) 按片段对击球分组，并把每次击球变成一次飞行。飞行从不跨越相机片段。其观测是该片段中有检测且满足以下条件的帧：
 
-```text
- t0 + contact_guard_s  <  pts_s  <=  t_end - contact_guard_s     (followed by another contact)
- t0 + contact_guard_s  <  pts_s  <=  t_end                       (landing or open end)
-
- t0             reviewed contact time
- t_end          next contact time, landing bracket end, or min(segment end, until_s)
- contact_guard_s  default 0.02 s
+```{math}
+\begin{aligned}
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} - \mathtt{contact\_guard\_s} && (1) \\
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} && (2)
+\end{aligned}
 ```
+
+(1) 该飞行之后还有一次击球；
+(2) 落地或开放结尾。
+
+| 符号 | 含义 |
+|---|---|
+| {math}`t_0` | 复核的击球时间 |
+| {math}`t_\mathrm{end}` | 下一次击球时间、落地区间终点，或 min(片段终点, `until_s`) |
+| `contact_guard_s` | 默认 0.02 s |
 
 保护间隔会丢弃紧挨击球的检测，此时羽毛球常常与球拍混在一起。每条飞行记录中的 `observation_frame_ids` 和 `observation_time_offsets_s` 准确显示使用了哪些帧，偏移从 `t0` 开始测量。
 
@@ -69,14 +83,14 @@
 
 ## 实际检查的容差
 
-```text
- contact bracket width         <= 0.5 s                  inputs.py
- contact guard                 0.02 s (default)          analysis.py
- renderer PTS match            1e-3 s per frame          render.py
- ODE (simulate)                rtol 1e-7, atol 1e-8, max_step 0.02 s
- ODE (floor_crossing)          rtol 1e-9, atol 1e-10, max_step 0.01 s
- floor gate                    lowest point >= -0.02 m
- landing within_region         region widened by 1e-3 m
-```
+| 检查项 | 值 | 来源 |
+|---|---|---|
+| 击球区间宽度 | ≤ 0.5 s | `inputs.py` |
+| 击球保护间隔 | 0.02 s （默认） | `analysis.py` |
+| 渲染器 PTS 匹配 | 1e-3 s 每帧 | `render.py` |
+| ODE (`simulate`) | rtol 1e-7, atol 1e-8, max_step 0.02 s | `physics.py` |
+| ODE (`floor_crossing`) | rtol 1e-9, atol 1e-10, max_step 0.01 s | `physics.py` |
+| 地面门限 | 最低点 ≥ -0.02 m | `physics.py` |
+| 落地 `within_region` | 区域外扩 1e-3 m | `analysis.py` |
 
 相关内容：所有字段见[数据格式](schemas.md)，如何用你自己的检测器生成轨迹见[工作流程](workflow.md)。

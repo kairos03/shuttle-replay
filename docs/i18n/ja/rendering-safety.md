@@ -6,9 +6,12 @@
 
 PyAV は Python プロセス内で FFmpeg ライブラリをラップします。レンダラーは元動画を開き、最初の映像ストリームと、存在すれば最初の音声ストリームを取得し、ファイル順にパケットをデマルチプレクスします([`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279))。
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/ja/render-pipeline.svg
+:alt: レンダーパイプライン：source.mp4 をデマックスし、映像パケットをフレーム k にデコード、検査、描画して staging.mp4 にエンコード、音声パケットはコピー
+:class: technical-figure
+:width: 100%
+
+ソースパケットからステージングファイルまでのフレームごとの経路。
 ```
 
 デコードされたすべての映像フレーム `k` について、描画の前に次を確認します。
@@ -25,13 +28,12 @@ PyAV は Python プロセス内で FFmpeg ライブラリをラップします�
 
 ## レイアウト
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/ja/render-layout.svg
+:alt: 出力レイアウト 6:4：左は等倍のソースフレーム（W x H）、右はコートを幅 4/6 W に収めた上面図
+:class: technical-figure
+:width: 100%
+
+出力フレーム：ソースパネルと上面図の幅の比は 6:4。
 ```
 
 `W` と `H` は、元動画の幅と高さを偶数に切り上げた値です(H.264 は偶数のサイズが必要です)。真上から見た画面の幅は `2 * round(W * 4 / 6 / 2)` です。元フレームは倍率 1.0 で左上隅に貼り付けられ、切り上げによって追加される黒いピクセルの行または列は最大 1 つです。真上から見た画面([`TopView`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L49-L69))は、6.10 x 13.40 m のコートを余白付きでパネルに収まるよう縮小し、コートの縦横比を保ちます。

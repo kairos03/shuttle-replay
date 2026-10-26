@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="en" width="520" height="854" viewBox="0 0 520 854" role="img" aria-labelledby="title desc" font-family="&#x27;Noto Sans&#x27;, &#x27;Segoe UI&#x27;, Helvetica, Arial, sans-serif">
+<title id="title">Render pipeline with per-frame checks</title>
+<desc id="desc">The source MP4 is demultiplexed. Video packets are decoded into frame k, which is checked against the analysis frame (frame_id, PTS present, PTS difference at most 1e-3 s), drawn and encoded into a staging MP4. Audio packets are stream-copied into the same staging file. The staging file is fully decoded and verified, then linked to the output without overwriting. Any failure raises RenderError and removes the staging file.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#20312b"/></marker></defs>
+<rect x="0.5" y="0.5" width="519" height="853" rx="6" fill="#fbfbf8" stroke="#dfe5e1" stroke-width="1"/>
+<text x="260" y="30" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">Render pipeline with per-frame checks</text>
+<rect x="181" y="52.1" width="240" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="301" y="72.4" font-size="14" text-anchor="middle" fill="#20312b">source video (MP4)</text>
+<rect x="181" y="109.6" width="240" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="301" y="133.15" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">demux</text>
+<line x1="301" y1="83.6" x2="301" y2="109.6" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="65" y="173.6" width="230" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="180" y="193.9" font-size="14" text-anchor="middle" fill="#20312b">video packets</text>
+<rect x="337" y="173.6" width="170" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="422" y="193.9" font-size="14" text-anchor="middle" fill="#20312b">audio packets</text>
+<polyline points="261,147.6 261,160.6 180,160.6 180,173.6" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<polyline points="341,147.6 341,160.6 422,160.6 422,173.6" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="65" y="239.1" width="230" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="180" y="262.65" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">decode frame k</text>
+<line x1="180" y1="205.1" x2="180" y2="239.1" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="65" y="303.1" width="230" height="86.2" rx="4" fill="#ffffff" stroke="#367ca5" stroke-width="1.4"/>
+<text x="180" y="323.4" font-size="14" text-anchor="middle" fill="#20312b">check frame k</text>
+<text x="180" y="345.3" font-size="13" text-anchor="middle" fill="#20312b">analysis frame_id = k</text>
+<text x="180" y="362.2" font-size="13" text-anchor="middle" fill="#20312b">frame has a PTS</text>
+<text x="180" y="379.1" font-size="13" text-anchor="middle" fill="#20312b">|PTS - pts_s| &lt;= 1e-3 s</text>
+<line x1="180" y1="277.1" x2="180" y2="303.1" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="65" y="415.3" width="230" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="180" y="438.85" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">draw overlays (Pillow)</text>
+<line x1="180" y1="389.3" x2="180" y2="415.3" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="65" y="479.3" width="230" height="49" rx="12" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="180" y="499.6" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">encode: libx264, h264 or</text>
+<text x="180" y="517.1" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">mpeg4</text>
+<line x1="180" y1="453.3" x2="180" y2="479.3" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="52" y="227.1" width="256" height="311.2" rx="10" fill="none" stroke="#5d6b65" stroke-width="1.1" stroke-dasharray="4 4"/>
+<text x="54" y="222.1" font-size="13" text-anchor="start" fill="#5d6b65">k = 0, 1, 2, ...</text>
+<rect x="337" y="303.1" width="170" height="49" rx="12" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="422" y="323.4" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">stream copy, no</text>
+<text x="422" y="340.9" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">re-encoding</text>
+<line x1="422" y1="205.1" x2="422" y2="303.1" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="136" y="554.3" width="330" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="301" y="574.6" font-size="14" text-anchor="middle" fill="#20312b">staging MP4</text>
+<line x1="180" y1="528.3" x2="180" y2="554.3" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<line x1="422" y1="352.1" x2="422" y2="554.3" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="151" y="611.8" width="300" height="49" rx="4" fill="#ffffff" stroke="#367ca5" stroke-width="1.4"/>
+<text x="301" y="632.1" font-size="14" text-anchor="middle" fill="#20312b">verify: full decode, frame count, audio</text>
+<text x="301" y="649.6" font-size="14" text-anchor="middle" fill="#20312b">timing</text>
+<line x1="301" y1="585.8" x2="301" y2="611.8" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="151" y="686.8" width="300" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="301" y="710.35" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">link to the output, never overwrite</text>
+<line x1="301" y1="660.8" x2="301" y2="686.8" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="181" y="750.8" width="240" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="301" y="771.1" font-size="14" text-anchor="middle" fill="#20312b">replay MP4</text>
+<line x1="301" y1="724.8" x2="301" y2="750.8" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="20" y="804.3" width="480" height="30.9" rx="6" fill="#ffffff" stroke="#ce7317" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="260" y="823.65" font-size="13" text-anchor="middle" fill="#20312b">Any failure: RenderError, staging file removed</text>
+</svg>

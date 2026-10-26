@@ -14,9 +14,12 @@ l'originale, prende il primo stream video e, se presente, il primo stream
 audio, e ne demultiplexa i pacchetti nell'ordine del file
 ([`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279)).
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/it/render-pipeline.svg
+:alt: Pipeline di rendering: source.mp4 viene demultiplexato; i pacchetti video diventano il fotogramma k, verificati, disegnati e codificati in staging.mp4; l'audio è copiato
+:class: technical-figure
+:width: 100%
+
+Percorso di ogni fotogramma dai pacchetti sorgente al file temporaneo.
 ```
 
 Per ogni fotogramma video decodificato `k`, prima di disegnare, verifica che:
@@ -49,13 +52,12 @@ decodificato
 
 ## Layout
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/it/render-layout.svg
+:alt: Layout 6:4: a sinistra il fotogramma sorgente non scalato (W x H); a destra la vista dall'alto, campo adattato a 4/6 W
+:class: technical-figure
+:width: 100%
+
+Fotogramma di uscita: pannello sorgente e vista dall'alto in rapporto di larghezza 6:4.
 ```
 
 `W` e `H` sono larghezza e altezza dell'originale arrotondate per eccesso a

@@ -13,9 +13,12 @@ PyAV оборачивает библиотеки FFmpeg внутри проце�
 демультиплексирует их пакеты в порядке файла
 ([`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279)).
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/ru/render-pipeline.svg
+:alt: Конвейер рендера: source.mp4 демультиплексируется; видеопакеты декодируются в кадр k, проверяются, рисуются и кодируются в staging.mp4; аудиопакеты копируются
+:class: technical-figure
+:width: 100%
+
+Путь каждого кадра от исходных пакетов до промежуточного файла.
 ```
 
 Для каждого декодированного видеокадра `k` до рисования проверяется, что:
@@ -45,13 +48,12 @@ PyAV оборачивает библиотеки FFmpeg внутри проце�
 
 ## Компоновка
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/ru/render-layout.svg
+:alt: Макет 6:4: слева исходный кадр без масштабирования (W x H); справа вид сверху, корт вписан в ширину 4/6 W
+:class: technical-figure
+:width: 100%
+
+Выходной кадр: панель источника и вид сверху в соотношении ширины 6:4.
 ```
 
 `W` и `H` это ширина и высота исходника, округлённые вверх до чётных чисел

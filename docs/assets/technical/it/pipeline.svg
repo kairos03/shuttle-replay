@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="it" width="520" height="606" viewBox="0 0 520 606" role="img" aria-labelledby="title desc" font-family="&#x27;Noto Sans&#x27;, &#x27;Segoe UI&#x27;, Helvetica, Arial, sans-serif">
+<title id="title">Flusso dei dati dagli input revisionati al replay</title>
+<desc id="desc">Il JSON di input della calibrazione passa per calibrate e produce il JSON di calibrazione. Il JSON di calibrazione, tracks JSON e review JSON entrano in analyze, che scrive il JSON di analisi. Il video sorgente e il JSON di analisi entrano in render, che scrive l'MP4 di replay e il JSON del report di rendering. Il comando run esegue analyze e render in un solo passo.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#20312b"/></marker></defs>
+<rect x="0.5" y="0.5" width="519" height="605" rx="6" fill="#fbfbf8" stroke="#dfe5e1" stroke-width="1"/>
+<text x="260" y="30" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">Flusso dei dati dagli input revisionati al replay</text>
+<rect x="20" y="52.1" width="146" height="86.8" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="72.4" font-size="14" text-anchor="middle" fill="#20312b">JSON di input della</text>
+<text x="93" y="89.9" font-size="14" text-anchor="middle" fill="#20312b">calibrazione</text>
+<text x="93" y="111.8" font-size="13" text-anchor="middle" fill="#5d6b65">punti a terra +</text>
+<text x="93" y="128.7" font-size="13" text-anchor="middle" fill="#5d6b65">ancore della rete</text>
+<rect x="354" y="52.1" width="146" height="86.8" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="427" y="80.85" font-size="14" text-anchor="middle" fill="#20312b">JSON di</text>
+<text x="427" y="98.35" font-size="14" text-anchor="middle" fill="#20312b">calibrazione</text>
+<text x="427" y="120.25" font-size="13" text-anchor="middle" fill="#5d6b65">P, H, errori</text>
+<rect x="198" y="76.5" width="124" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="260" y="100.05" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">calibrate</text>
+<line x1="166" y1="95.5" x2="198" y2="95.5" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<line x1="322" y1="95.5" x2="354" y2="95.5" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="20" y="168.9" width="146" height="69.3" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="189.2" font-size="14" text-anchor="middle" fill="#20312b">tracks JSON</text>
+<text x="93" y="211.1" font-size="13" text-anchor="middle" fill="#5d6b65">le tue rilevazioni,</text>
+<text x="93" y="228" font-size="13" text-anchor="middle" fill="#5d6b65">PTS</text>
+<rect x="187" y="168.9" width="146" height="69.3" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="260" y="189.2" font-size="14" text-anchor="middle" fill="#20312b">review JSON</text>
+<text x="260" y="211.1" font-size="13" text-anchor="middle" fill="#5d6b65">contatti, fine dei</text>
+<text x="260" y="228" font-size="13" text-anchor="middle" fill="#5d6b65">voli</text>
+<rect x="198" y="268.2" width="124" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="260" y="291.75" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">analyze</text>
+<line x1="260" y1="238.2" x2="260" y2="268.2" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<polyline points="93,238.2 93,287.2 198,287.2" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<polyline points="427,138.9 427,287.2 322,287.2" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="20" y="336.2" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="356.5" font-size="14" text-anchor="middle" fill="#20312b">video sorgente</text>
+<text x="93" y="378.4" font-size="13" text-anchor="middle" fill="#5d6b65">file locale</text>
+<rect x="187" y="336.2" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="260" y="366.95" font-size="14" text-anchor="middle" fill="#20312b">JSON di analisi</text>
+<line x1="260" y1="306.2" x2="260" y2="336.2" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="198" y="418.6" width="124" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="260" y="442.15" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">render</text>
+<line x1="260" y1="388.6" x2="260" y2="418.6" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<polyline points="93,388.6 93,437.6 198,437.6" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="20" y="492.6" width="146" height="49" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="521.65" font-size="14" text-anchor="middle" fill="#20312b">MP4 di replay</text>
+<rect x="354" y="492.6" width="146" height="49" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="427" y="512.9" font-size="14" text-anchor="middle" fill="#20312b">JSON del report di</text>
+<text x="427" y="530.4" font-size="14" text-anchor="middle" fill="#20312b">rendering</text>
+<line x1="260" y1="456.6" x2="260" y2="474.6" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt"/>
+<polyline points="260,474.6 93,474.6 93,492.6" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<polyline points="260,474.6 427,474.6 427,492.6" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="174" y="256.2" width="172" height="212.4" rx="10" fill="none" stroke="#ce7317" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="306" y="247.2" width="36" height="18" rx="0" fill="#fbfbf8" stroke="none" stroke-width="1"/>
+<text x="324" y="261.2" font-size="13" text-anchor="middle" fill="#ce7317" font-weight="bold">run</text>
+<text x="260" y="563.6" font-size="13" text-anchor="middle" fill="#5d6b65">run = analyze + render; il video viene verificato prima di scrivere i JSON</text>
+<rect x="150.27" y="576.45" width="28" height="16" rx="3" fill="#ffffff" stroke="#20312b" stroke-width="1.2"/>
+<text x="186.27" y="589.45" font-size="13" text-anchor="start" fill="#20312b">file</text>
+<rect x="233.41" y="576.45" width="28" height="16" rx="8" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="269.41" y="589.45" font-size="13" text-anchor="start" fill="#20312b">comando CLI</text>
+</svg>

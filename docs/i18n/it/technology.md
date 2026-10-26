@@ -10,17 +10,12 @@ sorgente che descrive, fissate al commit
 
 ## Flusso dei dati
 
-```text
- source video (local file) ----------------------------------------+
-                                                                   |
- calibration input JSON --> calibrate --> calibration JSON         |
- (ground points + net anchors)              (P, H, errors)         |
-                                                 |                 |
- tracks JSON (your detections, PTS) -------------+                 |
- review JSON (contacts, flight ends) ------------+                 |
-                                                 v                 v
-                                       analyze --> analysis JSON --> render --> replay MP4
-                                                                         +--> render report JSON
+```{figure} assets/technical/it/pipeline.svg
+:alt: Flusso dati: calibrazione, tracce e revisione alimentano analyze; video e analisi alimentano render, che scrive l'MP4 e un report
+:class: technical-figure
+:width: 100%
+
+Ingressi e uscite dei tre comandi.
 ```
 
 La CLI espone ogni freccia come un comando: `calibrate`, `analyze`, `render` e

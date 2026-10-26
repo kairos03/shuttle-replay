@@ -6,9 +6,12 @@
 
 PyAV 在 Python 进程内封装 FFmpeg 库。渲染器打开源文件，取第一个视频流以及（如果存在）第一个音频流，并按文件顺序解复用它们的数据包（[`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279)）。
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/zh/render-pipeline.svg
+:alt: 渲染流水线：解复用 source.mp4；视频包解码为第 k 帧，经检查、绘制并编码为 staging.mp4；音频包直接复制
+:class: technical-figure
+:width: 100%
+
+从源数据包到暂存文件的逐帧路径。
 ```
 
 对每个解码出的视频帧 `k`，在绘制前检查：
@@ -25,13 +28,12 @@ PyAV 在 Python 进程内封装 FFmpeg 库。渲染器打开源文件，取第�
 
 ## 布局
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/zh/render-layout.svg
+:alt: 输出布局 6:4：左侧为未缩放的源帧（W x H）；右侧为俯视图，球场缩放至 4/6 W 宽
+:class: technical-figure
+:width: 100%
+
+输出帧：源画面与俯视图宽度比 6:4。
 ```
 
 `W` 和 `H` 是源视频宽高向上取整到偶数的结果（H.264 需要偶数尺寸）；俯视图宽度为 `2 * round(W * 4 / 6 / 2)`。源帧以 1.0 的比例贴到左上角；向上取整最多增加一行或一列黑色像素。俯视图（[`TopView`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L49-L69)）把 6.10 x 13.40 m 的球场缩放到面板内并留出边距，同时保持球场比例。

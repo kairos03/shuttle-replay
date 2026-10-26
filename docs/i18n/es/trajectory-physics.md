@@ -34,14 +34,34 @@ El estado es la posición `r = (x, y, z)` en metros y la velocidad `v` en m/s.
 Las ecuaciones del movimiento
 ([`_rhs`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/physics.py#L16-L23)):
 
-```text
- dr/dt = v
- dv/dt = -k * |v| * v  -  g * e_z
+```{math}
+\begin{aligned}
+\frac{d\mathbf{r}}{dt} &= \mathbf{v} \\
+\frac{d\mathbf{v}}{dt} &= -k \, \lVert \mathbf{v} \rVert \, \mathbf{v} - g \, \mathbf{e}_z
+\end{aligned}
+```
 
- g    gravity, default 9.81 m/s^2 (review "physics": "gravity_m_s2")
- k    drag coefficient per flight, units 1/m
- |v|  speed in m/s
- e_z  unit vector pointing up
+| Símbolo | Significado |
+|---|---|
+| {math}`g` | gravedad, por defecto 9,81 m/s², fijada en review (`"physics": "gravity_m_s2"`) |
+| {math}`k` | coeficiente de arrastre por vuelo, unidades 1/m |
+| {math}`\lVert \mathbf{v} \rVert` | rapidez en m/s |
+| {math}`\mathbf{e}_z` | vector unitario hacia arriba |
+
+```{figure} assets/technical/es/trajectory.svg
+:alt: Ejemplo sintético: altura frente a distancia horizontal desde el inicio con arrastre k = 0,18 1/m y sin arrastre k = 0
+:class: technical-figure
+:width: 100%
+
+Ejemplo sintético con condiciones iniciales elegidas, calculado con simulate del propio paquete; no es una medición, un vuelo ajustado ni una prueba de rendimiento.
+```
+
+```{figure} assets/technical/es/speed.svg
+:alt: Ejemplo sintético: velocidad |v| en m/s frente al tiempo con k = 0,18 1/m y sin arrastre k = 0
+:class: technical-figure
+:width: 100%
+
+Velocidad del mismo ejemplo sintético a partir del estado de velocidad integrado; la curva sin arrastre solo sirve de contraste.
 ```
 
 La resistencia apunta en contra del movimiento y crece con el cuadrado de la
@@ -81,15 +101,30 @@ horizonte de 10 s.
 construye un único vector de residuos. Cada entrada es una diferencia dividida
 por una escala, de modo que "1" significa "un error esperado":
 
-```text
- pixels    (project(P, r(t_i)) - uv_i) / pixel_sigma_px            default 3.0 px
- start     (r(0) - contact_prior) / start_sigma                     xy 0.5 m, height 0.3 m
- drag      (k - 0.18) / 0.15
- intercept (r(T) - next_contact_prior) / next_contact_sigma         intercepted only
- landing   z(T) / 0.01   and   distance outside region / 0.02       landing only
- floor     min(z, 0) / 0.01 on 41 samples from 0 to T
- net       max(0, 1.55 - h_net) / 0.02                              only if a crossing is required
+```{math}
+\begin{aligned}
+\rho_\mathrm{pixels} &= \frac{\operatorname{project}(P, \mathbf{r}(t_i)) - \mathbf{uv}_i}{\mathtt{pixel\_sigma\_px}} \\
+\rho_\mathrm{start} &= \frac{\mathbf{r}(0) - \mathtt{contact\_prior}}{\mathtt{start\_sigma}} \\
+\rho_\mathrm{drag} &= \frac{k - 0.18}{0.15} \\
+\rho_\mathrm{intercept} &= \frac{\mathbf{r}(T) - \mathtt{next\_contact\_prior}}{\mathtt{next\_contact\_sigma}} \\
+\mathbf{d}^{-} &= \max\!\left(\mathbf{b}_{\min}-\mathbf{r}_{xy}(T),\mathbf{0}\right) \\
+\mathbf{d}^{+} &= \max\!\left(\mathbf{r}_{xy}(T)-\mathbf{b}_{\max},\mathbf{0}\right) \\
+\mathbf{d}_\mathrm{out} &= \mathbf{d}^{-}+\mathbf{d}^{+} \\
+\rho_\mathrm{landing} &= \left(\frac{z(T)}{0.01},\frac{d_{\mathrm{out},x}}{0.02},\frac{d_{\mathrm{out},y}}{0.02}\right) \\
+\rho_\mathrm{floor} &= \frac{\min(z, 0)}{0.01} \\
+\rho_\mathrm{net} &= \frac{\max(0,\ 1.55 - h_\mathrm{net})}{0.02}
+\end{aligned}
 ```
+
+| Término | Escala o condición |
+|---|---|
+| {math}`\rho_\mathrm{pixels}` | por defecto 3,0 px |
+| {math}`\rho_\mathrm{start}` | xy 0,5 m, altura 0,3 m |
+| {math}`\rho_\mathrm{drag}` | siempre |
+| {math}`\rho_\mathrm{intercept}` | solo interceptados |
+| {math}`\rho_\mathrm{landing}` | solo aterrizaje; tres componentes: altura y exceso fuera de la región en cada coordenada. {math}`\mathbf{d}_\mathrm{out}` es un vector de dos componentes; {math}`\mathbf{b}_{\min}` y {math}`\mathbf{b}_{\max}` son los límites de la región; max se aplica por componente |
+| {math}`\rho_\mathrm{floor}` | en 41 muestras de 0 a {math}`T` |
+| {math}`\rho_\mathrm{net}` | solo si se requiere cruzar |
 
 `T` es la duración del vuelo. El prior del contacto procede de
 [`_contact_prior`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L49-L54):
@@ -113,12 +148,17 @@ una estimación balística hacia el objetivo final. Gana el resultado de menor
 coste. Los límites mantienen la búsqueda en un rango físico
 ([código](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L64-L69)):
 
-```text
- x in [-3, 9.1] m     y in [-3, 16.4] m     z in [0.05, 4.5] m
- vx, vy, vz in [-velocity_bound_m_s, +velocity_bound_m_s]    default 120 m/s
- k in drag_bounds_per_m                                      default [0.015, 0.6] 1/m
- landing time T in the reviewed landing bracket (landing flights only)
+```{math}
+\begin{aligned}
+x &\in [-3,\ 9.1]\ \mathrm{m} \\
+y &\in [-3,\ 16.4]\ \mathrm{m} \\
+z &\in [0.05,\ 4.5]\ \mathrm{m} \\
+v_x, v_y, v_z &\in [-v_{\max},\ +v_{\max}] \\
+k &\in \mathtt{drag\_bounds\_per\_m}
+\end{aligned}
 ```
+
+Valores por defecto: {math}`v_{\max}` = `velocity_bound_m_s` 120 m/s; `drag_bounds_per_m` [0.015, 0.6] 1/m. El instante de aterrizaje {math}`T` está en el intervalo de aterrizaje revisado (solo vuelos con aterrizaje).
 
 Los siete parámetros de estado/resistencia se marcan en `parameters_at_bound`
 cuando su distancia a un límite es menor que el 0.1% de su rango permitido

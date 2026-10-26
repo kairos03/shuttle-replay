@@ -13,10 +13,17 @@ I contenitori video memorizzano un timestamp di presentazione (PTS) per ogni
 fotogramma come numero intero di tick, con un `time_base` che indica quanto
 dura un tick. Il tempo del fotogramma in secondi è:
 
-```text
- time_s = pts * time_base
+```{math}
+\mathrm{time\_s} = \mathrm{pts} \cdot \mathrm{time\_base}
+```
 
- example: time_base = 1/30000 s, pts = 3003  ->  0.1001 s
+Esempio:
+
+```{math}
+\begin{aligned}
+\mathrm{time\_base} &= \tfrac{1}{30000}\ \mathrm{s}, \quad \mathrm{pts} = 3003 \\
+\Rightarrow \mathrm{time\_s} &= 3003 \cdot \tfrac{1}{30000}\ \mathrm{s} = 0.1001\ \mathrm{s}
+\end{aligned}
 ```
 
 Molte registrazioni da smartphone e dello schermo hanno un **frame rate
@@ -95,14 +102,21 @@ raggruppa i contatti per segmento e trasforma ogni contatto in un volo. Un
 volo non attraversa mai un segmento di telecamera. Le sue osservazioni sono i
 fotogrammi del segmento con una rilevazione e
 
-```text
- t0 + contact_guard_s  <  pts_s  <=  t_end - contact_guard_s     (followed by another contact)
- t0 + contact_guard_s  <  pts_s  <=  t_end                       (landing or open end)
-
- t0             reviewed contact time
- t_end          next contact time, landing bracket end, or min(segment end, until_s)
- contact_guard_s  default 0.02 s
+```{math}
+\begin{aligned}
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} - \mathtt{contact\_guard\_s} && (1) \\
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} && (2)
+\end{aligned}
 ```
+
+(1) il volo è seguito da un altro contatto;
+(2) atterraggio o fine aperta.
+
+| Simbolo | Significato |
+|---|---|
+| {math}`t_0` | istante di contatto revisionato |
+| {math}`t_\mathrm{end}` | istante del contatto successivo, fine dell'intervallo di atterraggio o min(fine segmento, `until_s`) |
+| `contact_guard_s` | predefinito 0,02 s |
 
 La guardia scarta le rilevazioni proprio al contatto, dove il volano è spesso
 fuso con la racchetta. `observation_frame_ids` e `observation_time_offsets_s`
@@ -133,15 +147,15 @@ Esistono tre campionamenti diversi, e solo il primo è per fotogramma video:
 
 ## Tolleranze effettivamente verificate
 
-```text
- contact bracket width         <= 0.5 s                  inputs.py
- contact guard                 0.02 s (default)          analysis.py
- renderer PTS match            1e-3 s per frame          render.py
- ODE (simulate)                rtol 1e-7, atol 1e-8, max_step 0.02 s
- ODE (floor_crossing)          rtol 1e-9, atol 1e-10, max_step 0.01 s
- floor gate                    lowest point >= -0.02 m
- landing within_region         region widened by 1e-3 m
-```
+| Controllo | Valore | Sorgente |
+|---|---|---|
+| ampiezza dell'intervallo di contatto | ≤ 0.5 s | `inputs.py` |
+| margine di contatto | 0.02 s (predefinito) | `analysis.py` |
+| corrispondenza PTS del renderer | 1e-3 s per fotogramma | `render.py` |
+| ODE (`simulate`) | rtol 1e-7, atol 1e-8, max_step 0.02 s | `physics.py` |
+| ODE (`floor_crossing`) | rtol 1e-9, atol 1e-10, max_step 0.01 s | `physics.py` |
+| soglia del pavimento | punto più basso ≥ -0.02 m | `physics.py` |
+| atterraggio `within_region` | regione allargata di 1e-3 m | `analysis.py` |
 
 Correlati: [gli schemi](schemas.md) per ogni campo,
 [il flusso di lavoro](workflow.md) per produrre tracks dal tuo rilevatore.

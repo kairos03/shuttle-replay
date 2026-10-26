@@ -6,10 +6,17 @@
 
 영상 컨테이너는 모든 프레임의 표시 타임스탬프(PTS)를 정수 틱 수로 저장하며, 틱 하나의 길이를 나타내는 `time_base`를 함께 둡니다. 프레임의 초 단위 시각은 다음과 같습니다.
 
-```text
- time_s = pts * time_base
+```{math}
+\mathrm{time\_s} = \mathrm{pts} \cdot \mathrm{time\_base}
+```
 
- example: time_base = 1/30000 s, pts = 3003  ->  0.1001 s
+예:
+
+```{math}
+\begin{aligned}
+\mathrm{time\_base} &= \tfrac{1}{30000}\ \mathrm{s}, \quad \mathrm{pts} = 3003 \\
+\Rightarrow \mathrm{time\_s} &= 3003 \cdot \tfrac{1}{30000}\ \mathrm{s} = 0.1001\ \mathrm{s}
+\end{aligned}
 ```
 
 많은 휴대폰 영상과 화면 녹화는 **가변 프레임 레이트**(VFR)를 가집니다. 프레임 길이가 서로 다릅니다. 이때 `frame_index / fps`로 계산하면 실제 시각에서 점점 벗어납니다. 그래서 트랙 형식은 FFmpeg/PyAV가 디코딩한 `pts_s`를 프레임마다 저장합니다([스키마](schemas.md) 참고). 합성 데모는 의도적으로 VFR을 사용합니다. `time_base` 1/30000 s에서 일곱 번째 프레임마다 1000틱 대신 1001틱 동안 지속됩니다([`frame_pts_ticks`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/synthetic.py#L52-L58)).
@@ -48,14 +55,21 @@
 
 [`analyze`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L154-L234)는 타구 시점을 구간별로 묶고 각 타구 시점을 비행 하나로 바꿉니다. 비행은 카메라 구간을 넘지 않습니다. 비행의 관측값은 검출이 있으면서 다음 조건을 만족하는 구간의 프레임입니다.
 
-```text
- t0 + contact_guard_s  <  pts_s  <=  t_end - contact_guard_s     (followed by another contact)
- t0 + contact_guard_s  <  pts_s  <=  t_end                       (landing or open end)
-
- t0             reviewed contact time
- t_end          next contact time, landing bracket end, or min(segment end, until_s)
- contact_guard_s  default 0.02 s
+```{math}
+\begin{aligned}
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} - \mathtt{contact\_guard\_s} && (1) \\
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} && (2)
+\end{aligned}
 ```
+
+(1) 비행 뒤에 다른 접촉이 이어지는 경우.
+(2) 착지 또는 열린 끝인 경우.
+
+| 기호 | 의미 |
+|---|---|
+| {math}`t_0` | 리뷰한 접촉 시각 |
+| {math}`t_\mathrm{end}` | 다음 접촉 시각, 착지 구간 끝, 또는 min(세그먼트 끝, `until_s`) |
+| `contact_guard_s` | 기본값 0.02 s |
 
 가드는 셔틀콕이 라켓과 겹쳐 보이기 쉬운 타구 순간 바로 근처의 검출을 버립니다. 각 비행 기록의 `observation_frame_ids`와 `observation_time_offsets_s`는 어떤 프레임이 쓰였는지 정확히 보여 주며, 오프셋은 `t0`부터 측정됩니다.
 
@@ -69,14 +83,14 @@
 
 ## 실제로 검사하는 허용 오차
 
-```text
- contact bracket width         <= 0.5 s                  inputs.py
- contact guard                 0.02 s (default)          analysis.py
- renderer PTS match            1e-3 s per frame          render.py
- ODE (simulate)                rtol 1e-7, atol 1e-8, max_step 0.02 s
- ODE (floor_crossing)          rtol 1e-9, atol 1e-10, max_step 0.01 s
- floor gate                    lowest point >= -0.02 m
- landing within_region         region widened by 1e-3 m
-```
+| 검사 | 값 | 소스 |
+|---|---|---|
+| 접촉 구간 폭 | ≤ 0.5 s | `inputs.py` |
+| 접촉 가드 | 0.02 s (기본값) | `analysis.py` |
+| 렌더러 PTS 일치 | 1e-3 s 프레임당 | `render.py` |
+| ODE (`simulate`) | rtol 1e-7, atol 1e-8, max_step 0.02 s | `physics.py` |
+| ODE (`floor_crossing`) | rtol 1e-9, atol 1e-10, max_step 0.01 s | `physics.py` |
+| 바닥 게이트 | 최저점 ≥ -0.02 m | `physics.py` |
+| 착지 `within_region` | 영역을 1e-3 m 확장 | `analysis.py` |
 
 관련 문서: 모든 필드는 [스키마](schemas.md), 자신의 검출기로 트랙을 만드는 방법은 [워크플로](workflow.md)를 참고하세요.

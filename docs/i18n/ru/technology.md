@@ -10,17 +10,12 @@
 
 ## Поток данных
 
-```text
- source video (local file) ----------------------------------------+
-                                                                   |
- calibration input JSON --> calibrate --> calibration JSON         |
- (ground points + net anchors)              (P, H, errors)         |
-                                                 |                 |
- tracks JSON (your detections, PTS) -------------+                 |
- review JSON (contacts, flight ends) ------------+                 |
-                                                 v                 v
-                                       analyze --> analysis JSON --> render --> replay MP4
-                                                                         +--> render report JSON
+```{figure} assets/technical/ru/pipeline.svg
+:alt: Поток данных: калибровка, треки и ревью поступают в analyze; видео и анализ поступают в render, который пишет MP4 повтора и отчёт
+:class: technical-figure
+:width: 100%
+
+Входы и выходы трёх команд.
 ```
 
 CLI предоставляет каждую стрелку как команду: `calibrate`, `analyze`, `render`

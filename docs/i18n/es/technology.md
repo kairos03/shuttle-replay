@@ -10,17 +10,12 @@ que describe, fijadas al commit
 
 ## Flujo de datos
 
-```text
- source video (local file) ----------------------------------------+
-                                                                   |
- calibration input JSON --> calibrate --> calibration JSON         |
- (ground points + net anchors)              (P, H, errors)         |
-                                                 |                 |
- tracks JSON (your detections, PTS) -------------+                 |
- review JSON (contacts, flight ends) ------------+                 |
-                                                 v                 v
-                                       analyze --> analysis JSON --> render --> replay MP4
-                                                                         +--> render report JSON
+```{figure} assets/technical/es/pipeline.svg
+:alt: Flujo de datos: calibración, pistas y revisión alimentan analyze; vídeo y análisis alimentan render, que escribe el MP4 y un informe
+:class: technical-figure
+:width: 100%
+
+Entradas y salidas de los tres comandos.
 ```
 
 La CLI expone cada flecha como un comando: `calibrate`, `analyze`, `render` y

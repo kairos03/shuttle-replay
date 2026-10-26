@@ -14,9 +14,12 @@ renderizador abre el original, toma el primer flujo de vídeo y, si existe, el
 primer flujo de audio, y demultiplexa sus paquetes en el orden del archivo
 ([`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279)).
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/es/render-pipeline.svg
+:alt: Canal de render: se demultiplexa source.mp4; los paquetes de vídeo se decodifican al fotograma k, se comprueban, se dibujan y se codifican en staging.mp4; el audio se copia
+:class: technical-figure
+:width: 100%
+
+Recorrido de cada fotograma desde los paquetes de origen hasta el archivo provisional.
 ```
 
 Para cada fotograma de vídeo decodificado `k`, antes de dibujar, comprueba
@@ -49,13 +52,12 @@ primer desfase A/V decodificado
 
 ## Disposición
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/es/render-layout.svg
+:alt: Diseño 6:4: a la izquierda el fotograma original sin escalar (W x H); a la derecha la vista cenital con la pista ajustada a 4/6 W
+:class: technical-figure
+:width: 100%
+
+Fotograma de salida: panel de origen y vista cenital en proporción de ancho 6:4.
 ```
 
 `W` y `H` son la anchura y la altura del original redondeadas hacia arriba a

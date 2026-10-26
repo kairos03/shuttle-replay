@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="ru" width="520" height="534" viewBox="0 0 520 534" role="img" aria-labelledby="title desc" font-family="&#x27;Noto Sans&#x27;, &#x27;Segoe UI&#x27;, Helvetica, Arial, sans-serif">
+<title id="title">Компоновка кадра повтора, 6:4</title>
+<desc id="desc">Выходной кадр содержит слева исходный кадр без масштабирования, справа вид сверху. Для исходника 1920 x 1080 холст имеет 3200 x 1080 пикселей: панель исходника 1920 x 1080, панель вида сверху 1280 x 1080. Вид сверху вписывает корт 6.10 x 13.40 м с сохранением пропорций.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#20312b"/></marker></defs>
+<rect x="0.5" y="0.5" width="519" height="533" rx="6" fill="#fbfbf8" stroke="#dfe5e1" stroke-width="1"/>
+<text x="260" y="30" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">Компоновка кадра повтора, 6:4</text>
+<text x="260" y="54.1" font-size="20" text-anchor="middle" fill="#5d6b65">Пример: исходник 1920 x 1080</text>
+<text x="202" y="95.1" font-size="20" text-anchor="middle" fill="#20312b" font-weight="bold">исходный кадр, масштаб</text>
+<text x="202" y="121.1" font-size="20" text-anchor="middle" fill="#20312b" font-weight="bold">1.0</text>
+<text x="422" y="95.1" font-size="20" text-anchor="middle" fill="#20312b" font-weight="bold">вид сверху</text>
+<rect x="70" y="137.1" width="264" height="148.5" rx="0" fill="#eef1ee" stroke="none" stroke-width="1"/>
+<clipPath id="srcpanel"><rect x="70" y="137.1" width="264" height="148.5"/></clipPath><g clip-path="url(#srcpanel)">
+<line x1="92" y1="137.1" x2="40.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="114" y1="137.1" x2="62.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="136" y1="137.1" x2="84.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="158" y1="137.1" x2="106.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="180" y1="137.1" x2="128.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="202" y1="137.1" x2="150.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="224" y1="137.1" x2="172.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="246" y1="137.1" x2="194.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="268" y1="137.1" x2="216.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="290" y1="137.1" x2="238.03" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="312" y1="137.1" x2="260.02" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="334" y1="137.1" x2="282.02" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+<line x1="356" y1="137.1" x2="304.02" y2="285.6" stroke="#dde3de" stroke-width="1" stroke-linecap="butt"/>
+</g>
+<rect x="70" y="137.1" width="264" height="148.5" rx="0" fill="none" stroke="#20312b" stroke-width="1.2"/>
+<text x="202" y="218.35" font-size="22" text-anchor="middle" fill="#20312b">1920 × 1080</text>
+<rect x="334" y="137.1" width="176" height="148.5" rx="0" fill="#184634" stroke="#20312b" stroke-width="1.2"/>
+<line x1="390.41" y1="142.81" x2="453.59" y2="142.81" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="390.41" y1="282.09" x2="453.59" y2="282.09" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="390.41" y1="142.81" x2="390.41" y2="282.09" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="453.59" y1="142.81" x2="453.59" y2="282.09" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="395.21" y1="142.81" x2="395.21" y2="282.09" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="448.79" y1="142.81" x2="448.79" y2="282.09" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="390.41" y1="191.6" x2="453.59" y2="191.6" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="390.41" y1="233.3" x2="453.59" y2="233.3" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="390.41" y1="150.73" x2="453.59" y2="150.73" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="390.41" y1="274.17" x2="453.59" y2="274.17" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="422" y1="142.81" x2="422" y2="191.6" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="422" y1="233.3" x2="422" y2="282.09" stroke="#e6e6e6" stroke-width="0.7" stroke-linecap="butt"/>
+<line x1="388.12" y1="212.45" x2="455.88" y2="212.45" stroke="#ffffff" stroke-width="1.8" stroke-linecap="butt"/>
+<line x1="70" y1="295.6" x2="70" y2="307.6" stroke="#20312b" stroke-width="1.1" stroke-linecap="butt"/>
+<line x1="334" y1="295.6" x2="334" y2="307.6" stroke="#20312b" stroke-width="1.1" stroke-linecap="butt"/>
+<line x1="72" y1="301.6" x2="332" y2="301.6" stroke="#20312b" stroke-width="1.1" stroke-linecap="butt"/>
+<text x="202" y="323.6" font-size="18" text-anchor="middle" fill="#ce7317" font-weight="bold">6</text>
+<text x="202" y="345.6" font-size="20" text-anchor="middle" fill="#5d6b65">1920 px</text>
+<line x1="334" y1="295.6" x2="334" y2="307.6" stroke="#20312b" stroke-width="1.1" stroke-linecap="butt"/>
+<line x1="510" y1="295.6" x2="510" y2="307.6" stroke="#20312b" stroke-width="1.1" stroke-linecap="butt"/>
+<line x1="336" y1="301.6" x2="508" y2="301.6" stroke="#20312b" stroke-width="1.1" stroke-linecap="butt"/>
+<text x="422" y="323.6" font-size="18" text-anchor="middle" fill="#ce7317" font-weight="bold">4</text>
+<text x="422" y="345.6" font-size="20" text-anchor="middle" fill="#5d6b65">1280 px</text>
+<line x1="48" y1="137.1" x2="60" y2="137.1" stroke="#20312b" stroke-width="1.1" stroke-linecap="butt"/>
+<line x1="48" y1="285.6" x2="60" y2="285.6" stroke="#20312b" stroke-width="1.1" stroke-linecap="butt"/>
+<line x1="54" y1="139.1" x2="54" y2="283.6" stroke="#20312b" stroke-width="1.1" stroke-linecap="butt"/>
+<text x="48" y="215.35" font-size="16" text-anchor="end" fill="#5d6b65">1080</text>
+<text x="260" y="367.6" font-size="20" text-anchor="middle" fill="#20312b">ваш видеокадр без пересэмплирования</text>
+<text x="260" y="388.6" font-size="20" text-anchor="middle" fill="#20312b">ширина вида сверху = 2 * round(W * 4 / 6 / 2) =</text>
+<text x="260" y="414.6" font-size="20" text-anchor="middle" fill="#20312b">1280 px</text>
+<text x="260" y="435.6" font-size="20" text-anchor="middle" fill="#20312b">W, H: размер исходника, округлённый вверх</text>
+<text x="260" y="461.6" font-size="20" text-anchor="middle" fill="#20312b">до чётного</text>
+<text x="260" y="482.6" font-size="20" text-anchor="middle" fill="#20312b">корт вписан, пропорции сохранены: 75.82</text>
+<text x="260" y="508.6" font-size="20" text-anchor="middle" fill="#20312b">px/m</text>
+</svg>

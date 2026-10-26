@@ -13,9 +13,12 @@ the source, takes the first video stream and, if present, the first audio
 stream, and demuxes their packets in file order
 ([`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279)).
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/en/render-pipeline.svg
+:alt: Render pipeline: source.mp4 is demuxed; video packets are decoded to frame k, checked, drawn and encoded to staging.mp4; audio packets are copied
+:class: technical-figure
+:width: 100%
+
+Per-frame path from source packets to the staging file.
 ```
 
 For every decoded video frame `k`, before drawing, it checks that:
@@ -44,13 +47,12 @@ decoded A/V offset
 
 ## Layout
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/en/render-layout.svg
+:alt: Output layout 6:4: left, the source frame unscaled (W x H); right, the top view with the court scaled to fit a width of 4/6 W
+:class: technical-figure
+:width: 100%
+
+Output frame: source panel and top view in a 6:4 width ratio.
 ```
 
 `W` and `H` are the source width and height rounded up to even numbers (H.264

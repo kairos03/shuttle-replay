@@ -13,9 +13,12 @@ renderizador abre o original, pega o primeiro stream de vídeo e, se houver, o
 primeiro stream de áudio, e faz o demux dos seus pacotes na ordem do arquivo
 ([`render`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/render.py#L128-L279)).
 
-```text
- source.mp4 --demux--> video packets --decode--> frame k --check--> draw --encode--> staging.mp4
-                  \--> audio packets ----------------------------- copy ----------/
+```{figure} assets/technical/pt-BR/render-pipeline.svg
+:alt: Pipeline de renderização: source.mp4 é demultiplexado; pacotes de vídeo viram o quadro k, são verificados, desenhados e codificados em staging.mp4; o áudio é copiado
+:class: technical-figure
+:width: 100%
+
+Caminho de cada quadro dos pacotes de origem até o arquivo temporário.
 ```
 
 Para cada frame de vídeo decodificado `k`, antes de desenhar, ele verifica
@@ -46,13 +49,12 @@ tempos de apresentação dos pacotes e o primeiro offset A/V decodificado
 
 ## Layout
 
-```text
- +--------------------------+------------------+
- |                          |  TOP VIEW        |
- |  source frame, unscaled  |  (court scaled   |
- |  W x H                   |   to fit, 4/6 W) |
- +--------------------------+------------------+
-            6                        4
+```{figure} assets/technical/pt-BR/render-layout.svg
+:alt: Layout 6:4: à esquerda o quadro original sem escala (W x H); à direita a vista superior com a quadra ajustada a 4/6 W
+:class: technical-figure
+:width: 100%
+
+Quadro de saída: painel de origem e vista superior na proporção de largura 6:4.
 ```
 
 `W` e `H` são a largura e a altura do original arredondadas para cima até

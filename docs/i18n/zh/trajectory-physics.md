@@ -17,14 +17,34 @@
 
 状态是以米为单位的位置 `r = (x, y, z)` 和以 m/s 为单位的速度 `v`。运动方程（[`_rhs`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/physics.py#L16-L23)）：
 
-```text
- dr/dt = v
- dv/dt = -k * |v| * v  -  g * e_z
+```{math}
+\begin{aligned}
+\frac{d\mathbf{r}}{dt} &= \mathbf{v} \\
+\frac{d\mathbf{v}}{dt} &= -k \, \lVert \mathbf{v} \rVert \, \mathbf{v} - g \, \mathbf{e}_z
+\end{aligned}
+```
 
- g    gravity, default 9.81 m/s^2 (review "physics": "gravity_m_s2")
- k    drag coefficient per flight, units 1/m
- |v|  speed in m/s
- e_z  unit vector pointing up
+| 符号 | 含义 |
+|---|---|
+| {math}`g` | 重力，默认 9.81 m/s²，由 review 设置 (`"physics": "gravity_m_s2"`) |
+| {math}`k` | 每次飞行的阻力系数，单位 1/m |
+| {math}`\lVert \mathbf{v} \rVert` | 速度大小，单位 m/s |
+| {math}`\mathbf{e}_z` | 指向上方的单位向量 |
+
+```{figure} assets/technical/zh/trajectory.svg
+:alt: 合成示例：k = 0.18 1/m 阻力与 k = 0 无阻力情况下，高度随距起点水平距离的变化
+:class: technical-figure
+:width: 100%
+
+由选定初始条件、用本包 simulate 计算的合成示例；并非测量、拟合飞行或性能基准。
+```
+
+```{figure} assets/technical/zh/speed.svg
+:alt: 合成示例：k = 0.18 1/m 阻力与 k = 0 无阻力情况下速度 |v|（m/s）随时间的变化
+:class: technical-figure
+:width: 100%
+
+同一合成示例的速度，取自积分得到的速度状态；无阻力曲线仅作对比。
 ```
 
 阻力方向与运动方向相反，并随速度的平方增长。理解 `k` 的一个有用方式：竖直下落的羽毛球在阻力等于重力时停止加速，此时达到终端速度 `sqrt(g / k)`。在默认先验 `k = 0.18 1/m` 下约为 7.4 m/s。因此高速击出的羽毛球会急剧减速；模型不包含旋转、翻滚或风。
@@ -39,15 +59,30 @@
 
 [`fit_flight`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L57-L151) 构建一个残差向量。每一项都是差值除以一个尺度，因此“1”表示“一个预期误差”：
 
-```text
- pixels    (project(P, r(t_i)) - uv_i) / pixel_sigma_px            default 3.0 px
- start     (r(0) - contact_prior) / start_sigma                     xy 0.5 m, height 0.3 m
- drag      (k - 0.18) / 0.15
- intercept (r(T) - next_contact_prior) / next_contact_sigma         intercepted only
- landing   z(T) / 0.01   and   distance outside region / 0.02       landing only
- floor     min(z, 0) / 0.01 on 41 samples from 0 to T
- net       max(0, 1.55 - h_net) / 0.02                              only if a crossing is required
+```{math}
+\begin{aligned}
+\rho_\mathrm{pixels} &= \frac{\operatorname{project}(P, \mathbf{r}(t_i)) - \mathbf{uv}_i}{\mathtt{pixel\_sigma\_px}} \\
+\rho_\mathrm{start} &= \frac{\mathbf{r}(0) - \mathtt{contact\_prior}}{\mathtt{start\_sigma}} \\
+\rho_\mathrm{drag} &= \frac{k - 0.18}{0.15} \\
+\rho_\mathrm{intercept} &= \frac{\mathbf{r}(T) - \mathtt{next\_contact\_prior}}{\mathtt{next\_contact\_sigma}} \\
+\mathbf{d}^{-} &= \max\!\left(\mathbf{b}_{\min}-\mathbf{r}_{xy}(T),\mathbf{0}\right) \\
+\mathbf{d}^{+} &= \max\!\left(\mathbf{r}_{xy}(T)-\mathbf{b}_{\max},\mathbf{0}\right) \\
+\mathbf{d}_\mathrm{out} &= \mathbf{d}^{-}+\mathbf{d}^{+} \\
+\rho_\mathrm{landing} &= \left(\frac{z(T)}{0.01},\frac{d_{\mathrm{out},x}}{0.02},\frac{d_{\mathrm{out},y}}{0.02}\right) \\
+\rho_\mathrm{floor} &= \frac{\min(z, 0)}{0.01} \\
+\rho_\mathrm{net} &= \frac{\max(0,\ 1.55 - h_\mathrm{net})}{0.02}
+\end{aligned}
 ```
+
+| 项 | 尺度或条件 |
+|---|---|
+| {math}`\rho_\mathrm{pixels}` | 默认 3.0 px |
+| {math}`\rho_\mathrm{start}` | xy 0.5 m，高度 0.3 m |
+| {math}`\rho_\mathrm{drag}` | 始终 |
+| {math}`\rho_\mathrm{intercept}` | 仅拦截飞行 |
+| {math}`\rho_\mathrm{landing}` | 仅用于落地飞行；三个残差项分别为高度和两个坐标方向的区域越界量。{math}`\mathbf{d}_\mathrm{out}`是二维向量，{math}`\mathbf{b}_{\min}`和{math}`\mathbf{b}_{\max}`是区域边界；max按分量计算 |
+| {math}`\rho_\mathrm{floor}` | 在 0 到 {math}`T` 的 41 个采样点上 |
+| {math}`\rho_\mathrm{net}` | 仅在要求过网时 |
 
 `T` 是飞行时长。击球先验来自 [`_contact_prior`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L49-L54)：如果击球有 `image_px`，则把穿过该像素的射线与复核的 `height_m` 高度平面相交；否则直接使用 `court_xy_m` 和 `height_m`。sigma 取自每个击球的 `xy_sigma_m` 和 `height_sigma_m`，缺省时使用上面显示的默认值。
 
@@ -55,12 +90,17 @@
 
 SciPy `least_squares` 以 `loss="soft_l1"` 和 `f_scale=1.5` 最小化总和，因此少数坏检测的拉动比普通平方和更小。它从六个起点运行：`k` 取 `0.1, 0.2, 0.35`，乘以在朝向终点目标的弹道猜测上额外加的 `1.0` 或 `3.0` m/s 向上速度。代价最低的结果胜出。边界使搜索保持在物理范围内（[源代码](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L64-L69)）：
 
-```text
- x in [-3, 9.1] m     y in [-3, 16.4] m     z in [0.05, 4.5] m
- vx, vy, vz in [-velocity_bound_m_s, +velocity_bound_m_s]    default 120 m/s
- k in drag_bounds_per_m                                      default [0.015, 0.6] 1/m
- landing time T in the reviewed landing bracket (landing flights only)
+```{math}
+\begin{aligned}
+x &\in [-3,\ 9.1]\ \mathrm{m} \\
+y &\in [-3,\ 16.4]\ \mathrm{m} \\
+z &\in [0.05,\ 4.5]\ \mathrm{m} \\
+v_x, v_y, v_z &\in [-v_{\max},\ +v_{\max}] \\
+k &\in \mathtt{drag\_bounds\_per\_m}
+\end{aligned}
 ```
+
+默认值：{math}`v_{\max}` = `velocity_bound_m_s` 120 m/s；`drag_bounds_per_m` [0.015, 0.6] 1/m。落地时间 {math}`T` 位于复核的落地区间内（仅落地飞行）。
 
 当七个状态/阻力参数与边界的距离小于其允许范围的 0.1% 时，会在 `parameters_at_bound` 中被标记（[源代码](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L129-L135)）。被标记的拟合会被拒绝。落地时刻不包含在这项诊断中。通过并不能证明可辨识性、唯一性，或不受先验影响。
 

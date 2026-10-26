@@ -8,17 +8,12 @@
 
 **世界坐标** `(X, Y, Z)` 是由 BWF 球场尺寸固定的球场坐标系中的米制数值（[`court.py`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/court.py#L1-L24)）：
 
-```text
-      X = 0                X = 6.10
- Y = 0  +--------------------+   far baseline (outer edge)
-        |                    |
-        |                    |
- Y=6.70 |====== net =========|   net plane; posts 1.55 m, centre 1.524 m
-        |                    |
-        |                    |
-Y=13.40 +--------------------+   near baseline (outer edge)
+```{figure} assets/technical/zh/court.svg
+:alt: 球场模型：X 0 至 6.10 m，Y 从 0（远端底线）到 13.40 m（近端底线），球网平面 Y = 6.70 m，网柱 1.55 m，中心 1.524 m，Z 自地面向上
+:class: technical-figure
+:width: 100%
 
- Z is up; Z = 0 is the court surface.
+球场坐标（米）；Z 向上，Z = 0 为场地表面。
 ```
 
 线宽为 40 mm，标定点使用**线的中心**：外侧线位于 X = 0.02 / 6.08 和 Y = 0.02 / 13.38，单打边线位于 X = 0.48 / 5.62，前发球线位于 Y = 4.70 / 8.70，双打后发球线位于 Y = 0.78 / 12.62，中线位于 X = 3.05（[`court_lines`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/court.py#L27-L52)）。在应填中心的位置填入外边缘，会使该点偏移 2 cm。
@@ -27,11 +22,11 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 针孔相机用一个 3x4 矩阵 `P` 把世界点映射到像素：
 
-```text
- [a]       [X]
- [b] = P * [Y]        u = a / c ,  v = b / c
- [c]       [Z]
-           [1]
+```{math}
+\begin{gathered}
+\begin{bmatrix} a \\ b \\ c \end{bmatrix} = P \begin{bmatrix} X \\ Y \\ Z \\ 1 \end{bmatrix} \\
+u = \frac{a}{c}, \qquad v = \frac{b}{c}
+\end{gathered}
 ```
 
 除以 `c` 就是透视：远处的物体看起来更小。`P` 把相机的位置和旋转（外参）与焦距和图像中心（内参）结合在一起。本项目从不把 `P` 拆分成这些部分，而是把 `P` 当作一个整体矩阵使用（[`project`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/geometry.py#L12-L15)）。相机中心 `C` 是唯一满足 `P * [C, 1] = 0` 的点，因此 `C = -inverse(P[:, :3]) * P[:, 3]`（[`camera_center`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/geometry.py#L24-L26)）。
@@ -40,9 +35,18 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 对于地面上的点，`Z = 0`，所以 `P` 的第三列乘以零后消失：
 
-```text
- P = [ p1  p2  p3  p4 ]          (four columns)
- floor point (X, Y, 0):  P * [X, Y, 0, 1] = [ p1 p2 p4 ] * [X, Y, 1] = H * [X, Y, 1]
+```{math}
+P = \begin{bmatrix} p_1 & p_2 & p_3 & p_4 \end{bmatrix}
+```
+
+{math}`p_1, \dots, p_4` 是 {math}`P` 的四列。
+
+```{math}
+\begin{aligned}
+P \begin{bmatrix} X \\ Y \\ 0 \\ 1 \end{bmatrix}
+&= \begin{bmatrix} p_1 & p_2 & p_4 \end{bmatrix} \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix} \\
+&= H \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix}
+\end{aligned}
 ```
 
 3x3 矩阵 `H = [p1 p2 p4]` 就是**单应矩阵**。它在 [`fit_homography`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/calibration.py#L58-L78) 中用归一化直接线性变换（DLT）从你的 `role: "fit"` 地面点拟合得到：
@@ -61,13 +65,18 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 地面点无法提供关于 `p3`（与高度相乘的那一列）的任何信息。这需要不在地面上且高度已知的点：通常是两根网柱的顶端，`Z = 1.55`。对于位于 `(X, Y, Z)`、在 `(u, v)` 处看到的锚点，记 `q = H * [X, Y, 1]`。投影条件就变成关于 `p3` 的线性方程：
 
-```text
- u * (q3 + Z * p3_3) = q1 + Z * p3_1
- v * (q3 + Z * p3_3) = q2 + Z * p3_2
+```{math}
+\begin{aligned}
+u \, (q_3 + Z \, p_{3,3}) &= q_1 + Z \, p_{3,1} \\
+v \, (q_3 + Z \, p_{3,3}) &= q_2 + Z \, p_{3,2}
+\end{aligned}
+```
 
- rearranged per anchor:
-   [ Z  0  -u*Z ] * p3 = u*q3 - q1
-   [ 0  Z  -v*Z ] * p3 = v*q3 - q2
+按每个锚点整理：
+
+```{math}
+\begin{bmatrix} Z & 0 & -u Z \\ 0 & Z & -v Z \end{bmatrix} p_3
+= \begin{bmatrix} u \, q_3 - q_1 \\ v \, q_3 - q_2 \end{bmatrix}
 ```
 
 [`camera_from_anchors`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/calibration.py#L81-L92) 把这些行堆叠起来，要求秩为 3，用最小二乘求解，并组装 `P = [h1 h2 p3 h3]`，其中 `h1`、`h2`、`h3` 是 `H` 的列。三个未知数、每个锚点两行，意味着两个锚点给出四个方程：几乎恰好确定。这就是为什么很小的锚点残差（`net_anchor_residuals_px`）几乎证明不了什么。锚点必须高于地面（`Z > 0.1 m`），并且至少需要两个。

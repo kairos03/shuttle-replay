@@ -17,14 +17,34 @@
 
 상태는 미터 단위 위치 `r = (x, y, z)`와 m/s 단위 속도 `v`입니다. 운동 방정식은 다음과 같습니다([`_rhs`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/physics.py#L16-L23)).
 
-```text
- dr/dt = v
- dv/dt = -k * |v| * v  -  g * e_z
+```{math}
+\begin{aligned}
+\frac{d\mathbf{r}}{dt} &= \mathbf{v} \\
+\frac{d\mathbf{v}}{dt} &= -k \, \lVert \mathbf{v} \rVert \, \mathbf{v} - g \, \mathbf{e}_z
+\end{aligned}
+```
 
- g    gravity, default 9.81 m/s^2 (review "physics": "gravity_m_s2")
- k    drag coefficient per flight, units 1/m
- |v|  speed in m/s
- e_z  unit vector pointing up
+| 기호 | 의미 |
+|---|---|
+| {math}`g` | 중력, 기본값 9.81 m/s², review에서 설정 (`"physics": "gravity_m_s2"`) |
+| {math}`k` | 비행별 항력 계수, 단위 1/m |
+| {math}`\lVert \mathbf{v} \rVert` | 속력(m/s) |
+| {math}`\mathbf{e}_z` | 위쪽을 가리키는 단위 벡터 |
+
+```{figure} assets/technical/ko/trajectory.svg
+:alt: 합성 예시: 항력 k = 0.18 1/m와 항력 없는 k = 0에서 시작점부터의 수평 거리에 따른 높이
+:class: technical-figure
+:width: 100%
+
+선택한 초기 조건으로 패키지의 simulate를 호출해 계산한 합성 예시다. 측정값, 피팅된 비행, 성능 벤치마크가 아니다.
+```
+
+```{figure} assets/technical/ko/speed.svg
+:alt: 합성 예시: 항력 k = 0.18 1/m와 항력 없는 k = 0에서 시간에 따른 속력 |v|(m/s)
+:class: technical-figure
+:width: 100%
+
+같은 합성 예시의 속력으로, 적분한 속도 상태에서 얻었다. 항력 없는 곡선은 비교용이다.
 ```
 
 공기 저항은 운동 반대 방향을 향하고 속도의 제곱에 비례해 커집니다. `k`를 이해하는 유용한 방법이 있습니다. 똑바로 떨어지는 셔틀콕은 공기 저항이 중력과 같아지는 종단 속도 `sqrt(g / k)`에서 더 이상 가속하지 않습니다. 기본 사전값 `k = 0.18 1/m`이면 약 7.4 m/s입니다. 그래서 빠르게 맞은 셔틀콕은 급격히 느려집니다. 모델에는 회전, 텀블링, 바람이 없습니다.
@@ -39,15 +59,30 @@
 
 [`fit_flight`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L57-L151)는 잔차 벡터 하나를 만듭니다. 각 항목은 차이를 스케일로 나눈 값이므로 "1"은 "예상 오차 하나만큼"을 뜻합니다.
 
-```text
- pixels    (project(P, r(t_i)) - uv_i) / pixel_sigma_px            default 3.0 px
- start     (r(0) - contact_prior) / start_sigma                     xy 0.5 m, height 0.3 m
- drag      (k - 0.18) / 0.15
- intercept (r(T) - next_contact_prior) / next_contact_sigma         intercepted only
- landing   z(T) / 0.01   and   distance outside region / 0.02       landing only
- floor     min(z, 0) / 0.01 on 41 samples from 0 to T
- net       max(0, 1.55 - h_net) / 0.02                              only if a crossing is required
+```{math}
+\begin{aligned}
+\rho_\mathrm{pixels} &= \frac{\operatorname{project}(P, \mathbf{r}(t_i)) - \mathbf{uv}_i}{\mathtt{pixel\_sigma\_px}} \\
+\rho_\mathrm{start} &= \frac{\mathbf{r}(0) - \mathtt{contact\_prior}}{\mathtt{start\_sigma}} \\
+\rho_\mathrm{drag} &= \frac{k - 0.18}{0.15} \\
+\rho_\mathrm{intercept} &= \frac{\mathbf{r}(T) - \mathtt{next\_contact\_prior}}{\mathtt{next\_contact\_sigma}} \\
+\mathbf{d}^{-} &= \max\!\left(\mathbf{b}_{\min}-\mathbf{r}_{xy}(T),\mathbf{0}\right) \\
+\mathbf{d}^{+} &= \max\!\left(\mathbf{r}_{xy}(T)-\mathbf{b}_{\max},\mathbf{0}\right) \\
+\mathbf{d}_\mathrm{out} &= \mathbf{d}^{-}+\mathbf{d}^{+} \\
+\rho_\mathrm{landing} &= \left(\frac{z(T)}{0.01},\frac{d_{\mathrm{out},x}}{0.02},\frac{d_{\mathrm{out},y}}{0.02}\right) \\
+\rho_\mathrm{floor} &= \frac{\min(z, 0)}{0.01} \\
+\rho_\mathrm{net} &= \frac{\max(0,\ 1.55 - h_\mathrm{net})}{0.02}
+\end{aligned}
 ```
+
+| 항 | 스케일 또는 조건 |
+|---|---|
+| {math}`\rho_\mathrm{pixels}` | 기본값 3.0 px |
+| {math}`\rho_\mathrm{start}` | xy 0.5 m, 높이 0.3 m |
+| {math}`\rho_\mathrm{drag}` | 항상 |
+| {math}`\rho_\mathrm{intercept}` | 인터셉트된 비행만 |
+| {math}`\rho_\mathrm{landing}` | 착지 비행만 적용합니다. 높이와 각 좌표의 영역 이탈량으로 구성된 세 항입니다. {math}`\mathbf{d}_\mathrm{out}`은 2성분 벡터이고, {math}`\mathbf{b}_{\min}`과 {math}`\mathbf{b}_{\max}`는 영역의 하한과 상한입니다. max는 성분별로 적용합니다 |
+| {math}`\rho_\mathrm{floor}` | 0부터 {math}`T`까지 41개 샘플 |
+| {math}`\rho_\mathrm{net}` | 네트 통과가 필요한 경우만 |
 
 `T`는 비행 시간입니다. 타구 사전값은 [`_contact_prior`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L49-L54)에서 나옵니다. 타구 시점에 `image_px`가 있으면 그 픽셀을 지나는 광선을 검토된 `height_m` 높이의 평면과 교차시키고, 없으면 `court_xy_m`과 `height_m`을 그대로 사용합니다. 시그마는 각 타구 시점의 `xy_sigma_m`과 `height_sigma_m`에서 오며, 없으면 위에 표시된 기본값을 씁니다.
 
@@ -55,12 +90,17 @@
 
 SciPy `least_squares`는 `loss="soft_l1"`과 `f_scale=1.5`로 합을 최소화하므로, 나쁜 검출 몇 개는 일반 제곱합일 때보다 덜 끌어당깁니다. 시작점은 여섯 개입니다. 끝 목표를 향한 탄도 추정값에 추가 상향 속도 `1.0` 또는 `3.0` m/s를 더한 것과, `k`가 `0.1, 0.2, 0.35`인 경우를 조합합니다. 비용이 가장 낮은 결과가 선택됩니다. 경계는 탐색을 물리적인 범위로 유지합니다([소스](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L64-L69)).
 
-```text
- x in [-3, 9.1] m     y in [-3, 16.4] m     z in [0.05, 4.5] m
- vx, vy, vz in [-velocity_bound_m_s, +velocity_bound_m_s]    default 120 m/s
- k in drag_bounds_per_m                                      default [0.015, 0.6] 1/m
- landing time T in the reviewed landing bracket (landing flights only)
+```{math}
+\begin{aligned}
+x &\in [-3,\ 9.1]\ \mathrm{m} \\
+y &\in [-3,\ 16.4]\ \mathrm{m} \\
+z &\in [0.05,\ 4.5]\ \mathrm{m} \\
+v_x, v_y, v_z &\in [-v_{\max},\ +v_{\max}] \\
+k &\in \mathtt{drag\_bounds\_per\_m}
+\end{aligned}
 ```
+
+기본값: {math}`v_{\max}` = `velocity_bound_m_s` 120 m/s, `drag_bounds_per_m` [0.015, 0.6] 1/m. 착지 시각 {math}`T`는 리뷰한 착지 구간 안에 있다(착지 비행만).
 
 일곱 개의 상태/공기 저항 파라미터는 경계까지의 거리가 허용 범위의 0.1% 미만이면 `parameters_at_bound`에 표시됩니다([소스](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L129-L135)). 표시된 피팅은 거부됩니다. 착지 시각은 이 진단에 포함되지 않습니다. 통과했다고 해서 식별 가능성, 유일성, 또는 사전값 영향이 없음이 입증되지는 않습니다.
 

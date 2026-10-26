@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="zh" width="520" height="537" viewBox="0 0 520 537" role="img" aria-labelledby="title desc" font-family="&#x27;Noto Sans SC&#x27;, &#x27;PingFang SC&#x27;, &#x27;Microsoft YaHei&#x27;, &#x27;Noto Sans CJK SC&#x27;, sans-serif">
+<title id="title">从审核输入到回放的数据流</title>
+<desc id="desc">标定输入 JSON 经 calibrate 生成标定 JSON。标定 JSON、tracks JSON 和 review JSON 进入 analyze，写出分析 JSON。源视频和分析 JSON 进入 render，写出回放 MP4 和渲染报告 JSON。run 命令一步完成 analyze 和 render。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#20312b"/></marker></defs>
+<rect x="0.5" y="0.5" width="519" height="536" rx="6" fill="#fbfbf8" stroke="#dfe5e1" stroke-width="1"/>
+<text x="260" y="30" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">从审核输入到回放的数据流</text>
+<rect x="20" y="52.1" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="72.4" font-size="14" text-anchor="middle" fill="#20312b">标定输入 JSON</text>
+<text x="93" y="94.3" font-size="13" text-anchor="middle" fill="#5d6b65">地面点 + 球网锚点</text>
+<rect x="354" y="52.1" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="427" y="72.4" font-size="14" text-anchor="middle" fill="#20312b">标定 JSON</text>
+<text x="427" y="94.3" font-size="13" text-anchor="middle" fill="#5d6b65">P、H、误差</text>
+<rect x="198" y="59.3" width="124" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="260" y="82.85" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">calibrate</text>
+<line x1="166" y1="78.3" x2="198" y2="78.3" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<line x1="322" y1="78.3" x2="354" y2="78.3" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="20" y="134.5" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="154.8" font-size="14" text-anchor="middle" fill="#20312b">tracks JSON</text>
+<text x="93" y="176.7" font-size="13" text-anchor="middle" fill="#5d6b65">你的检测结果、PTS</text>
+<rect x="187" y="134.5" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="260" y="154.8" font-size="14" text-anchor="middle" fill="#20312b">review JSON</text>
+<text x="260" y="176.7" font-size="13" text-anchor="middle" fill="#5d6b65">击球接触、飞行终点</text>
+<rect x="198" y="216.9" width="124" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="260" y="240.45" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">analyze</text>
+<line x1="260" y1="186.9" x2="260" y2="216.9" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<polyline points="93,186.9 93,235.9 198,235.9" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<polyline points="427,104.5 427,235.9 322,235.9" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="20" y="284.9" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="305.2" font-size="14" text-anchor="middle" fill="#20312b">源视频</text>
+<text x="93" y="327.1" font-size="13" text-anchor="middle" fill="#5d6b65">本地文件</text>
+<rect x="187" y="284.9" width="146" height="52.4" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="260" y="315.65" font-size="14" text-anchor="middle" fill="#20312b">分析 JSON</text>
+<line x1="260" y1="254.9" x2="260" y2="284.9" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="198" y="367.3" width="124" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="260" y="390.85" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">render</text>
+<line x1="260" y1="337.3" x2="260" y2="367.3" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<polyline points="93,337.3 93,386.3 198,386.3" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="20" y="441.3" width="146" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="93" y="461.6" font-size="14" text-anchor="middle" fill="#20312b">回放 MP4</text>
+<rect x="354" y="441.3" width="146" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="427" y="461.6" font-size="14" text-anchor="middle" fill="#20312b">渲染报告 JSON</text>
+<line x1="260" y1="405.3" x2="260" y2="423.3" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt"/>
+<polyline points="260,423.3 93,423.3 93,441.3" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<polyline points="260,423.3 427,423.3 427,441.3" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="174" y="204.9" width="172" height="212.4" rx="10" fill="none" stroke="#ce7317" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="306" y="195.9" width="36" height="18" rx="0" fill="#fbfbf8" stroke="none" stroke-width="1"/>
+<text x="324" y="209.9" font-size="13" text-anchor="middle" fill="#ce7317" font-weight="bold">run</text>
+<text x="260" y="494.8" font-size="13" text-anchor="middle" fill="#5d6b65">run = analyze + render；先验证视频，再写出 JSON 文件</text>
+<rect x="163.79" y="507.65" width="28" height="16" rx="3" fill="#ffffff" stroke="#20312b" stroke-width="1.2"/>
+<text x="199.79" y="520.65" font-size="13" text-anchor="start" fill="#20312b">文件</text>
+<rect x="249.79" y="507.65" width="28" height="16" rx="8" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="285.79" y="520.65" font-size="13" text-anchor="start" fill="#20312b">CLI 命令</text>
+</svg>

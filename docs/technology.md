@@ -9,17 +9,12 @@ to the exact source lines it describes, pinned to commit
 
 ## Data flow
 
-```text
- source video (local file) ----------------------------------------+
-                                                                   |
- calibration input JSON --> calibrate --> calibration JSON         |
- (ground points + net anchors)              (P, H, errors)         |
-                                                 |                 |
- tracks JSON (your detections, PTS) -------------+                 |
- review JSON (contacts, flight ends) ------------+                 |
-                                                 v                 v
-                                       analyze --> analysis JSON --> render --> replay MP4
-                                                                         +--> render report JSON
+```{figure} assets/technical/en/pipeline.svg
+:alt: Data flow: calibration, tracks and review feed analyze; video and analysis feed render, which writes the replay MP4 and a render report
+:class: technical-figure
+:width: 100%
+
+Inputs and outputs of the three commands.
 ```
 
 The CLI exposes each arrow as a command: `calibrate`, `analyze`, `render`, and

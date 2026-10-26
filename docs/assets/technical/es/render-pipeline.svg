@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="es" width="520" height="899" viewBox="0 0 520 899" role="img" aria-labelledby="title desc" font-family="&#x27;Noto Sans&#x27;, &#x27;Segoe UI&#x27;, Helvetica, Arial, sans-serif">
+<title id="title">Proceso de renderizado con comprobación por fotograma</title>
+<desc id="desc">El MP4 de origen se demultiplexa. Los paquetes de vídeo se decodifican en el fotograma k, que se compara con el fotograma del análisis (frame_id, PTS presente, diferencia de PTS de 1e-3 s como máximo), se dibuja y se codifica en un MP4 provisional. Los paquetes de audio se copian como flujo al mismo archivo provisional. El archivo provisional se decodifica por completo y se verifica, y luego se enlaza a la salida sin sobrescribir. Cualquier fallo lanza RenderError y elimina el archivo provisional.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#20312b"/></marker></defs>
+<rect x="0.5" y="0.5" width="519" height="898" rx="6" fill="#fbfbf8" stroke="#dfe5e1" stroke-width="1"/>
+<text x="260" y="30" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">Proceso de renderizado con comprobación por</text>
+<text x="260" y="53.4" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">fotograma</text>
+<rect x="181" y="75.5" width="240" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="301" y="95.8" font-size="14" text-anchor="middle" fill="#20312b">vídeo de origen (MP4)</text>
+<rect x="181" y="133" width="240" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="301" y="156.55" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">demultiplexar</text>
+<line x1="301" y1="107" x2="301" y2="133" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="65" y="197" width="230" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="180" y="217.3" font-size="14" text-anchor="middle" fill="#20312b">paquetes de vídeo</text>
+<rect x="337" y="197" width="170" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="422" y="217.3" font-size="14" text-anchor="middle" fill="#20312b">paquetes de audio</text>
+<polyline points="261,171 261,184 180,184 180,197" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<polyline points="341,171 341,184 422,184 422,197" fill="none" stroke="#20312b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="65" y="262.5" width="230" height="38" rx="19" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="180" y="286.05" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">decodificar el fotograma k</text>
+<line x1="180" y1="228.5" x2="180" y2="262.5" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="65" y="326.5" width="230" height="86.2" rx="4" fill="#ffffff" stroke="#367ca5" stroke-width="1.4"/>
+<text x="180" y="346.8" font-size="14" text-anchor="middle" fill="#20312b">comprobar el fotograma k</text>
+<text x="180" y="368.7" font-size="13" text-anchor="middle" fill="#20312b">frame_id del análisis = k</text>
+<text x="180" y="385.6" font-size="13" text-anchor="middle" fill="#20312b">el fotograma tiene PTS</text>
+<text x="180" y="402.5" font-size="13" text-anchor="middle" fill="#20312b">|PTS - pts_s| &lt;= 1e-3 s</text>
+<line x1="180" y1="300.5" x2="180" y2="326.5" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="65" y="438.7" width="230" height="49" rx="12" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="180" y="459" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">dibujar superposiciones</text>
+<text x="180" y="476.5" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">(Pillow)</text>
+<line x1="180" y1="412.7" x2="180" y2="438.7" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="65" y="513.7" width="230" height="49" rx="12" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="180" y="534" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">codificar: libx264, h264 o</text>
+<text x="180" y="551.5" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">mpeg4</text>
+<line x1="180" y1="487.7" x2="180" y2="513.7" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="52" y="250.5" width="256" height="322.2" rx="10" fill="none" stroke="#5d6b65" stroke-width="1.1" stroke-dasharray="4 4"/>
+<text x="54" y="245.5" font-size="13" text-anchor="start" fill="#5d6b65">k = 0, 1, 2, ...</text>
+<rect x="337" y="326.5" width="170" height="49" rx="12" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="422" y="346.8" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">copia del flujo, sin</text>
+<text x="422" y="364.3" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">recodificar</text>
+<line x1="422" y1="228.5" x2="422" y2="326.5" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="136" y="588.7" width="330" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="301" y="609" font-size="14" text-anchor="middle" fill="#20312b">MP4 provisional</text>
+<line x1="180" y1="562.7" x2="180" y2="588.7" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<line x1="422" y1="375.5" x2="422" y2="588.7" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="151" y="646.2" width="300" height="49" rx="4" fill="#ffffff" stroke="#367ca5" stroke-width="1.4"/>
+<text x="301" y="666.5" font-size="14" text-anchor="middle" fill="#20312b">verificar: decodificación completa,</text>
+<text x="301" y="684" font-size="14" text-anchor="middle" fill="#20312b">número de fotogramas, tiempos de audio</text>
+<line x1="301" y1="620.2" x2="301" y2="646.2" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="151" y="721.2" width="300" height="49" rx="12" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<text x="301" y="741.5" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">enlazar a la salida, nunca</text>
+<text x="301" y="759" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="bold">sobrescribir</text>
+<line x1="301" y1="695.2" x2="301" y2="721.2" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="181" y="796.2" width="240" height="31.5" rx="4" fill="#ffffff" stroke="#20312b" stroke-width="1.4"/>
+<text x="301" y="816.5" font-size="14" text-anchor="middle" fill="#20312b">MP4 de repetición</text>
+<line x1="301" y1="770.2" x2="301" y2="796.2" stroke="#20312b" stroke-width="1.5" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<rect x="20" y="849.7" width="480" height="30.9" rx="6" fill="#ffffff" stroke="#ce7317" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="260" y="869.05" font-size="13" text-anchor="middle" fill="#20312b">Cualquier fallo: RenderError, se elimina el archivo provisional</text>
+</svg>

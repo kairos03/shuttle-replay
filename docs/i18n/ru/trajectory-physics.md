@@ -32,14 +32,34 @@
 движения
 ([`_rhs`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/physics.py#L16-L23)):
 
-```text
- dr/dt = v
- dv/dt = -k * |v| * v  -  g * e_z
+```{math}
+\begin{aligned}
+\frac{d\mathbf{r}}{dt} &= \mathbf{v} \\
+\frac{d\mathbf{v}}{dt} &= -k \, \lVert \mathbf{v} \rVert \, \mathbf{v} - g \, \mathbf{e}_z
+\end{aligned}
+```
 
- g    gravity, default 9.81 m/s^2 (review "physics": "gravity_m_s2")
- k    drag coefficient per flight, units 1/m
- |v|  speed in m/s
- e_z  unit vector pointing up
+| Символ | Значение |
+|---|---|
+| {math}`g` | ускорение свободного падения, по умолчанию 9,81 м/с², задаётся в review (`"physics": "gravity_m_s2"`) |
+| {math}`k` | коэффициент сопротивления для каждого полёта, единицы 1/м |
+| {math}`\lVert \mathbf{v} \rVert` | модуль скорости в м/с |
+| {math}`\mathbf{e}_z` | единичный вектор, направленный вверх |
+
+```{figure} assets/technical/ru/trajectory.svg
+:alt: Синтетический пример: высота в зависимости от горизонтального расстояния от старта при сопротивлении k = 0,18 1/м и без сопротивления k = 0
+:class: technical-figure
+:width: 100%
+
+Синтетический пример из выбранных начальных условий, рассчитан функцией simulate самого пакета; это не измерение, не подобранный полёт и не тест производительности.
+```
+
+```{figure} assets/technical/ru/speed.svg
+:alt: Синтетический пример: скорость |v| в м/с во времени при k = 0,18 1/м и без сопротивления k = 0
+:class: technical-figure
+:width: 100%
+
+Скорость того же синтетического примера из интегрированного вектора скорости; кривая без сопротивления дана только для сравнения.
 ```
 
 Сопротивление направлено против движения и растёт с квадратом скорости.
@@ -78,15 +98,30 @@
 строит один вектор невязок. Каждый элемент это разность, делённая на масштаб,
 поэтому «1» означает «одна ожидаемая ошибка»:
 
-```text
- pixels    (project(P, r(t_i)) - uv_i) / pixel_sigma_px            default 3.0 px
- start     (r(0) - contact_prior) / start_sigma                     xy 0.5 m, height 0.3 m
- drag      (k - 0.18) / 0.15
- intercept (r(T) - next_contact_prior) / next_contact_sigma         intercepted only
- landing   z(T) / 0.01   and   distance outside region / 0.02       landing only
- floor     min(z, 0) / 0.01 on 41 samples from 0 to T
- net       max(0, 1.55 - h_net) / 0.02                              only if a crossing is required
+```{math}
+\begin{aligned}
+\rho_\mathrm{pixels} &= \frac{\operatorname{project}(P, \mathbf{r}(t_i)) - \mathbf{uv}_i}{\mathtt{pixel\_sigma\_px}} \\
+\rho_\mathrm{start} &= \frac{\mathbf{r}(0) - \mathtt{contact\_prior}}{\mathtt{start\_sigma}} \\
+\rho_\mathrm{drag} &= \frac{k - 0.18}{0.15} \\
+\rho_\mathrm{intercept} &= \frac{\mathbf{r}(T) - \mathtt{next\_contact\_prior}}{\mathtt{next\_contact\_sigma}} \\
+\mathbf{d}^{-} &= \max\!\left(\mathbf{b}_{\min}-\mathbf{r}_{xy}(T),\mathbf{0}\right) \\
+\mathbf{d}^{+} &= \max\!\left(\mathbf{r}_{xy}(T)-\mathbf{b}_{\max},\mathbf{0}\right) \\
+\mathbf{d}_\mathrm{out} &= \mathbf{d}^{-}+\mathbf{d}^{+} \\
+\rho_\mathrm{landing} &= \left(\frac{z(T)}{0.01},\frac{d_{\mathrm{out},x}}{0.02},\frac{d_{\mathrm{out},y}}{0.02}\right) \\
+\rho_\mathrm{floor} &= \frac{\min(z, 0)}{0.01} \\
+\rho_\mathrm{net} &= \frac{\max(0,\ 1.55 - h_\mathrm{net})}{0.02}
+\end{aligned}
 ```
+
+| Член | Масштаб или условие |
+|---|---|
+| {math}`\rho_\mathrm{pixels}` | по умолчанию 3,0 px |
+| {math}`\rho_\mathrm{start}` | xy 0,5 м, высота 0,3 м |
+| {math}`\rho_\mathrm{drag}` | всегда |
+| {math}`\rho_\mathrm{intercept}` | только перехваченные |
+| {math}`\rho_\mathrm{landing}` | только при приземлении; три компонента: высота и выход за область по каждой из двух координат. {math}`\mathbf{d}_\mathrm{out}` — двухкомпонентный вектор; {math}`\mathbf{b}_{\min}` и {math}`\mathbf{b}_{\max}` — границы области; max применяется покомпонентно |
+| {math}`\rho_\mathrm{floor}` | на 41 отсчёте от 0 до {math}`T` |
+| {math}`\rho_\mathrm{net}` | только если требуется пересечение |
 
 `T` это длительность полёта. Априорная позиция касания берётся из
 [`_contact_prior`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L49-L54):
@@ -110,12 +145,17 @@ SciPy `least_squares` минимизирует сумму с `loss="soft_l1"` и
 Границы удерживают поиск в физической области
 ([исходный код](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L64-L69)):
 
-```text
- x in [-3, 9.1] m     y in [-3, 16.4] m     z in [0.05, 4.5] m
- vx, vy, vz in [-velocity_bound_m_s, +velocity_bound_m_s]    default 120 m/s
- k in drag_bounds_per_m                                      default [0.015, 0.6] 1/m
- landing time T in the reviewed landing bracket (landing flights only)
+```{math}
+\begin{aligned}
+x &\in [-3,\ 9.1]\ \mathrm{m} \\
+y &\in [-3,\ 16.4]\ \mathrm{m} \\
+z &\in [0.05,\ 4.5]\ \mathrm{m} \\
+v_x, v_y, v_z &\in [-v_{\max},\ +v_{\max}] \\
+k &\in \mathtt{drag\_bounds\_per\_m}
+\end{aligned}
 ```
+
+По умолчанию: {math}`v_{\max}` = `velocity_bound_m_s` 120 м/с; `drag_bounds_per_m` [0.015, 0.6] 1/м. Время приземления {math}`T` лежит в интервале приземления из ревью (только для полётов с приземлением).
 
 Семь параметров состояния и сопротивления отмечаются в `parameters_at_bound`,
 когда их расстояние до границы меньше 0.1% допустимого диапазона

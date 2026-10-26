@@ -10,17 +10,12 @@ Quellcodezeilen, die sie beschreibt, festgelegt auf Commit
 
 ## Datenfluss
 
-```text
- source video (local file) ----------------------------------------+
-                                                                   |
- calibration input JSON --> calibrate --> calibration JSON         |
- (ground points + net anchors)              (P, H, errors)         |
-                                                 |                 |
- tracks JSON (your detections, PTS) -------------+                 |
- review JSON (contacts, flight ends) ------------+                 |
-                                                 v                 v
-                                       analyze --> analysis JSON --> render --> replay MP4
-                                                                         +--> render report JSON
+```{figure} assets/technical/de/pipeline.svg
+:alt: Datenfluss: Kalibrierung, Tracks und Review speisen analyze; Video und Analyse speisen render, das MP4 und Render-Bericht schreibt
+:class: technical-figure
+:width: 100%
+
+Ein- und Ausgaben der drei Befehle.
 ```
 
 Die CLI stellt jeden Pfeil als Befehl bereit: `calibrate`, `analyze`, `render`

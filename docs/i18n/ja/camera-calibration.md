@@ -8,17 +8,12 @@
 
 **ワールド座標** `(X, Y, Z)` は、BWF のコート寸法で固定されたコート座標系のメートル単位の値です([`court.py`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/court.py#L1-L24))。
 
-```text
-      X = 0                X = 6.10
- Y = 0  +--------------------+   far baseline (outer edge)
-        |                    |
-        |                    |
- Y=6.70 |====== net =========|   net plane; posts 1.55 m, centre 1.524 m
-        |                    |
-        |                    |
-Y=13.40 +--------------------+   near baseline (outer edge)
+```{figure} assets/technical/ja/court.svg
+:alt: コートモデル：X は 0 から 6.10 m、Y は 0（奥のベースライン）から 13.40 m（手前のベースライン）、ネット面 Y = 6.70 m、支柱 1.55 m、中央 1.524 m、Z は床面から上向き
+:class: technical-figure
+:width: 100%
 
- Z is up; Z = 0 is the court surface.
+コート座標（メートル）。Z は上向きで、Z = 0 がコート面。
 ```
 
 ラインの幅は 40 mm で、キャリブレーション点には**ラインの中心**を使います。外側のラインは X = 0.02 / 6.08 と Y = 0.02 / 13.38、シングルスのサイドラインは X = 0.48 / 5.62、ショートサービスラインは Y = 4.70 / 8.70、ダブルスのロングサービスラインは Y = 0.78 / 12.62、センターラインは X = 3.05 です([`court_lines`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/court.py#L27-L52))。中心を指定すべきところに外側の縁を入力すると、その点は 2 cm ずれます。
@@ -27,11 +22,11 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 ピンホールカメラは 3x4 行列 `P` でワールドの点をピクセルに写します。
 
-```text
- [a]       [X]
- [b] = P * [Y]        u = a / c ,  v = b / c
- [c]       [Z]
-           [1]
+```{math}
+\begin{gathered}
+\begin{bmatrix} a \\ b \\ c \end{bmatrix} = P \begin{bmatrix} X \\ Y \\ Z \\ 1 \end{bmatrix} \\
+u = \frac{a}{c}, \qquad v = \frac{b}{c}
+\end{gathered}
 ```
 
 `c` で割ることが透視効果です。遠くのものは小さく見えます。`P` は、カメラの位置と回転(外部パラメータ)を、焦点距離と画像中心(内部パラメータ)と組み合わせたものです。このプロジェクトは `P` をこれらの部分に分解しません。代わりに `P` を1 つの行列として使います([`project`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/geometry.py#L12-L15))。カメラ中心 `C` は `P * [C, 1] = 0` を満たす唯一の点なので、`C = -inverse(P[:, :3]) * P[:, 3]` です([`camera_center`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/geometry.py#L24-L26))。
@@ -40,9 +35,18 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 床面上の点では `Z = 0` なので、`P` の 3 列目にはゼロが掛かって消えます。
 
-```text
- P = [ p1  p2  p3  p4 ]          (four columns)
- floor point (X, Y, 0):  P * [X, Y, 0, 1] = [ p1 p2 p4 ] * [X, Y, 1] = H * [X, Y, 1]
+```{math}
+P = \begin{bmatrix} p_1 & p_2 & p_3 & p_4 \end{bmatrix}
+```
+
+{math}`p_1, \dots, p_4` は {math}`P` の 4 つの列。
+
+```{math}
+\begin{aligned}
+P \begin{bmatrix} X \\ Y \\ 0 \\ 1 \end{bmatrix}
+&= \begin{bmatrix} p_1 & p_2 & p_4 \end{bmatrix} \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix} \\
+&= H \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix}
+\end{aligned}
 ```
 
 3x3 行列 `H = [p1 p2 p4]` が**ホモグラフィ**です。これは [`fit_homography`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/calibration.py#L58-L78) で、正規化された直接線形変換(DLT)により `role: "fit"` の地面点からフィッティングされます。
@@ -61,13 +65,18 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 床面の点は、高さに掛かる列 `p3` について何も教えてくれません。これを求めるには、床面上にない、高さが既知の点が必要です。通常は `Z = 1.55` の 2 本のネットポストの上端です。`(u, v)` に見える `(X, Y, Z)` のアンカーについて `q = H * [X, Y, 1]` とおくと、投影条件は `p3` について線形になります。
 
-```text
- u * (q3 + Z * p3_3) = q1 + Z * p3_1
- v * (q3 + Z * p3_3) = q2 + Z * p3_2
+```{math}
+\begin{aligned}
+u \, (q_3 + Z \, p_{3,3}) &= q_1 + Z \, p_{3,1} \\
+v \, (q_3 + Z \, p_{3,3}) &= q_2 + Z \, p_{3,2}
+\end{aligned}
+```
 
- rearranged per anchor:
-   [ Z  0  -u*Z ] * p3 = u*q3 - q1
-   [ 0  Z  -v*Z ] * p3 = v*q3 - q2
+アンカーごとに整理すると：
+
+```{math}
+\begin{bmatrix} Z & 0 & -u Z \\ 0 & Z & -v Z \end{bmatrix} p_3
+= \begin{bmatrix} u \, q_3 - q_1 \\ v \, q_3 - q_2 \end{bmatrix}
 ```
 
 [`camera_from_anchors`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/calibration.py#L81-L92) はこれらの行を積み重ね、ランク 3 を要求し、最小二乗で解き、`P = [h1 h2 p3 h3]` を組み立てます。ここで `h1`、`h2`、`h3` は `H` の列です。未知数が 3 つでアンカーあたり 2 行なので、2 つのアンカーで 4 つの方程式が得られ、ほぼちょうど決定されます。そのため、アンカー残差(`net_anchor_residuals_px`)が小さくてもほとんど何も証明されません。アンカーは高い位置(`Z > 0.1 m`)にあり、少なくとも 2 つ必要です。

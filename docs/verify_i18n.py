@@ -2,7 +2,9 @@
 
 Source checks (``docs/i18n/<lang>/`` against ``docs/*.md``): same file set,
 identical fenced code blocks / directives, inline code, explicit anchors and
-raw HTML markers. Site checks (``docs/_build/html``): ``<html lang>``, a
+raw HTML markers, inline math roles; technical pages
+use per-locale figures and {math} blocks with no ASCII diagrams left.
+Site checks (``docs/_build/html``): ``<html lang>``, a
 per-locale ``searchindex.js``, a ten-way same-page language selector on every
 page, and internal links and anchors that resolve.
 
@@ -60,9 +62,25 @@ _FENCE = re.compile(
 )
 _ANCHOR = re.compile(r"^\(([^)\s]+)\)=[ \t]*$", re.M)
 _COMMENT = re.compile(r"<!--.*?-->", re.S)
+_MATH_ROLE = re.compile(r"\{math\}`([^`\n]+)`")
 
 
-def _blocks(text):
+# Technical pages: diagrams are generated per-locale SVG figures and equations are
+# {math} blocks; no ASCII diagram or equation text block may remain.
+TECHNICAL = [
+    "technology.md",
+    "camera-calibration.md",
+    "trajectory-physics.md",
+    "observations-timing.md",
+    "rendering-safety.md",
+    "validation-limits.md",
+]
+FIGURES = ["pipeline", "court", "render-pipeline", "render-layout", "trajectory", "speed"]
+_FIGURE_PATH = re.compile(r"^assets/technical/(?P<lang>[A-Za-z-]+)/(?P<name>[a-z-]+)\.svg$")
+_OPTION = re.compile(r"^[ \t]*:[\w-]+:")
+
+
+def _blocks(text, lang="en", errors=None, where=""):
     blocks = []
     for match in _FENCE.finditer(text):
         info, body = match["info"].strip(), match["body"]
@@ -70,8 +88,73 @@ def _blocks(text):
         # Commands, JSON, include paths, toctree targets and all other options stay exact.
         if info in ("{image}", "{toctree}") or info.startswith("{image} "):
             body = re.sub(r"^([ \t]*:(?:alt|caption):)[^\n]*$", r"\1", body, flags=re.M)
+        if info.startswith("{figure} "):
+            # A figure may differ only in its locale path component (which must be
+            # this page's locale), its :alt: text and its caption paragraph.
+            path = info.removeprefix("{figure} ").strip()
+            found = _FIGURE_PATH.match(path)
+            if not found or found["lang"] != lang:
+                if errors is not None:
+                    errors.append(
+                        f"{where}: figure {path!r} is not assets/technical/{lang}/<name>.svg"
+                    )
+            else:
+                info = f"{{figure}} assets/technical/<lang>/{found['name']}.svg"
+            lines = body.splitlines()
+            options = []
+            for line in lines:
+                if not _OPTION.match(line):
+                    break
+                options.append(re.sub(r"^([ \t]*:alt:)[^\n]*$", r"\1", line))
+            caption = "\n".join(lines[len(options) :]).strip()
+            if errors is not None and (not caption or ":alt:" not in "\n".join(options)):
+                errors.append(f"{where}: figure {path!r} needs :alt: and a caption")
+            body = "\n".join(options) + "\n<caption>\n"
         blocks.append((info, body))
     return blocks
+
+
+def check_technical(lang, errors):
+    """No ASCII diagrams/equation text blocks; figures exist for the page's locale."""
+    base = DOCS if lang == "en" else DOCS / "i18n" / lang
+    used = set()
+    for name in TECHNICAL:
+        path = base / name
+        if not path.is_file():
+            continue
+        where = str(path.relative_to(DOCS))
+        text = path.read_text(encoding="utf-8")
+        for block in _FENCE.finditer(text):
+            info = block["info"].strip()
+            if info in ("", "text", "txt") and re.search(
+                r"-->|\+--|\|.*\||\*|\s=\s", block["body"]
+            ):
+                errors.append(f"{where}: ASCII diagram/equation text block remains")
+            if info.startswith("{figure} "):
+                found = _FIGURE_PATH.match(info.removeprefix("{figure} ").strip())
+                if found:
+                    used.add(found["name"])
+                    svg = DOCS / "assets" / "technical" / found["lang"] / f"{found['name']}.svg"
+                    if not svg.is_file() or svg.stat().st_size == 0:
+                        errors.append(f"{where}: missing or empty figure {svg.relative_to(DOCS)}")
+                    else:
+                        head = svg.read_text(encoding="utf-8")
+                        if "<svg" not in head or "<title" not in head or "<script" in head:
+                            errors.append(
+                                f"{svg.relative_to(DOCS)}: needs <svg>, <title>, no <script>"
+                            )
+            if info == "{math}" and not block["body"].strip():
+                errors.append(f"{where}: empty math block")
+    if used != set(FIGURES):
+        errors.append(f"{lang}: technical figures used {sorted(used)} != {sorted(FIGURES)}")
+    example = DOCS / "assets" / "technical" / "physics-example.json"
+    if lang == "en" and (
+        not example.is_file()
+        or "synthetic_not_measurement" not in example.read_text(encoding="utf-8")
+    ):
+        errors.append(
+            "assets/technical/physics-example.json missing or not marked synthetic_not_measurement"
+        )
 
 
 def _inline_code(text):
@@ -91,8 +174,11 @@ def check_sources(lang, errors):
         en = (DOCS / name).read_text(encoding="utf-8")
         tr = (src / name).read_text(encoding="utf-8")
         where = f"i18n/{lang}/{name}"
-        if _blocks(en) != _blocks(tr):
+        if _blocks(en, "en", errors, f"docs/{name}") != _blocks(tr, lang, errors, where):
             errors.append(f"{where}: fenced code blocks/directives differ from docs/{name}")
+        en_math, tr_math = _MATH_ROLE.findall(en), _MATH_ROLE.findall(tr)
+        if en_math != tr_math:
+            errors.append(f"{where}: inline {{math}} roles differ from docs/{name}")
         if _inline_code(en) != _inline_code(tr):
             diff = (_inline_code(en) - _inline_code(tr)) + (_inline_code(tr) - _inline_code(en))
             errors.append(f"{where}: inline code differs: {sorted(diff)}")
@@ -154,6 +240,9 @@ def check_site(langs, errors):
         root = OUT if url == "en" else OUT / url
         if not (root / "searchindex.js").is_file():
             errors.append(f"{url}: no searchindex.js")
+        for asset in ("_static/mathjax/tex-svg.js", "_static/mathjax/LICENSE"):
+            if not (root / asset).is_file():
+                errors.append(f"{url}: missing self-hosted {asset}")
         for name in PAGES:
             path = root / name
             if not path.is_file():
@@ -161,6 +250,19 @@ def check_site(langs, errors):
                 continue
             page = _parse(path)
             rel = path.relative_to(OUT)
+            html = path.read_text(encoding="utf-8")
+            if re.search(r"<script[^>]+src=\"https?://[^\"]*mathjax", html, re.I):
+                errors.append(f"{rel}: loads MathJax from a remote URL")
+            if 'class="math' in html and 'src="_static/mathjax/tex-svg.js' not in html:
+                errors.append(f"{rel}: math without the local _static/mathjax/tex-svg.js")
+            if name.removesuffix(".html") + ".md" in TECHNICAL:
+                for img in re.findall(r'<img[^>]+src="([^"]+)"', html):
+                    if (
+                        "/technical/" in img
+                        and f"/technical/{url}/" not in img
+                        and "technical/" + url + "/" not in img
+                    ):
+                        errors.append(f"{rel}: figure {img} is not the {url} locale")
             if page.lang != html_lang:
                 errors.append(f"{rel}: <html lang={page.lang!r}>, expected {html_lang!r}")
             if [lang for lang, _ in page.selector] != order:
@@ -208,6 +310,8 @@ def main(argv=None):
         errors.append(f"canonical sources {actual} != {sorted(CANONICAL)}")
     for lang in sorted(langs - {"en"}):
         check_sources(lang, errors)
+    for lang in sorted(langs):
+        check_technical(lang, errors)
     if not args.sources_only:
         check_site(langs, errors)
 

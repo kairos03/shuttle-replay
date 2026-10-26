@@ -8,17 +8,12 @@
 
 **월드 좌표** `(X, Y, Z)`는 BWF 코트 규격으로 고정된 코트 좌표계의 미터 단위 값입니다([`court.py`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/court.py#L1-L24)).
 
-```text
-      X = 0                X = 6.10
- Y = 0  +--------------------+   far baseline (outer edge)
-        |                    |
-        |                    |
- Y=6.70 |====== net =========|   net plane; posts 1.55 m, centre 1.524 m
-        |                    |
-        |                    |
-Y=13.40 +--------------------+   near baseline (outer edge)
+```{figure} assets/technical/ko/court.svg
+:alt: 코트 모델: X는 0에서 6.10 m, Y는 0(먼 쪽 베이스라인)에서 13.40 m(가까운 쪽 베이스라인), 네트 평면 Y = 6.70 m, 포스트 1.55 m, 중앙 1.524 m, Z는 바닥에서 위쪽
+:class: technical-figure
+:width: 100%
 
- Z is up; Z = 0 is the court surface.
+코트 좌표(미터). Z는 위쪽이며 Z = 0이 코트 바닥면이다.
 ```
 
 라인 폭은 40 mm이며 보정 점은 **라인 중심**을 사용합니다. 바깥 라인은 X = 0.02 / 6.08, Y = 0.02 / 13.38, 단식 사이드라인은 X = 0.48 / 5.62, 쇼트 서비스 라인은 Y = 4.70 / 8.70, 복식 롱 서비스 라인은 Y = 0.78 / 12.62, 센터 라인은 X = 3.05입니다([`court_lines`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/court.py#L27-L52)). 중심이 필요한 곳에 바깥 모서리를 입력하면 그 점이 2 cm 어긋납니다.
@@ -27,11 +22,11 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 핀홀 카메라는 3x4 행렬 `P`로 월드 점을 픽셀로 옮깁니다.
 
-```text
- [a]       [X]
- [b] = P * [Y]        u = a / c ,  v = b / c
- [c]       [Z]
-           [1]
+```{math}
+\begin{gathered}
+\begin{bmatrix} a \\ b \\ c \end{bmatrix} = P \begin{bmatrix} X \\ Y \\ Z \\ 1 \end{bmatrix} \\
+u = \frac{a}{c}, \qquad v = \frac{b}{c}
+\end{gathered}
 ```
 
 `c`로 나누는 것이 원근입니다. 먼 물체는 작게 보입니다. `P`는 카메라의 위치와 회전(외부 파라미터)을 초점 거리와 이미지 중심(내부 파라미터)과 결합합니다. 이 프로젝트는 `P`를 이 부분들로 나누지 않습니다. 대신 `P`를 하나의 행렬로 사용합니다([`project`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/geometry.py#L12-L15)). 카메라 중심 `C`는 `P * [C, 1] = 0`을 만족하는 유일한 점이므로 `C = -inverse(P[:, :3]) * P[:, 3]`입니다([`camera_center`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/geometry.py#L24-L26)).
@@ -40,9 +35,18 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 바닥 위의 점은 `Z = 0`이므로 `P`의 세 번째 열에 0이 곱해져 사라집니다.
 
-```text
- P = [ p1  p2  p3  p4 ]          (four columns)
- floor point (X, Y, 0):  P * [X, Y, 0, 1] = [ p1 p2 p4 ] * [X, Y, 1] = H * [X, Y, 1]
+```{math}
+P = \begin{bmatrix} p_1 & p_2 & p_3 & p_4 \end{bmatrix}
+```
+
+{math}`p_1, \dots, p_4`는 {math}`P`의 네 열이다.
+
+```{math}
+\begin{aligned}
+P \begin{bmatrix} X \\ Y \\ 0 \\ 1 \end{bmatrix}
+&= \begin{bmatrix} p_1 & p_2 & p_4 \end{bmatrix} \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix} \\
+&= H \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix}
+\end{aligned}
 ```
 
 3x3 행렬 `H = [p1 p2 p4]`가 **호모그래피**입니다. 이 행렬은 [`fit_homography`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/calibration.py#L58-L78)에서 정규화된 직접 선형 변환(DLT)으로 `role: "fit"` 지면 점들로부터 피팅됩니다.
@@ -61,13 +65,18 @@ Y=13.40 +--------------------+   near baseline (outer edge)
 
 바닥 점은 높이에 곱해지는 열인 `p3`에 대해 아무것도 알려 주지 않습니다. 이를 구하려면 바닥 위에 있지 않으면서 높이를 아는 점이 필요합니다. 보통 `Z = 1.55`인 두 네트 기둥의 꼭대기입니다. `(u, v)`에 보이는 `(X, Y, Z)` 앵커에 대해 `q = H * [X, Y, 1]`로 두면 투영 조건이 `p3`에 대해 선형이 됩니다.
 
-```text
- u * (q3 + Z * p3_3) = q1 + Z * p3_1
- v * (q3 + Z * p3_3) = q2 + Z * p3_2
+```{math}
+\begin{aligned}
+u \, (q_3 + Z \, p_{3,3}) &= q_1 + Z \, p_{3,1} \\
+v \, (q_3 + Z \, p_{3,3}) &= q_2 + Z \, p_{3,2}
+\end{aligned}
+```
 
- rearranged per anchor:
-   [ Z  0  -u*Z ] * p3 = u*q3 - q1
-   [ 0  Z  -v*Z ] * p3 = v*q3 - q2
+앵커마다 정리하면:
+
+```{math}
+\begin{bmatrix} Z & 0 & -u Z \\ 0 & Z & -v Z \end{bmatrix} p_3
+= \begin{bmatrix} u \, q_3 - q_1 \\ v \, q_3 - q_2 \end{bmatrix}
 ```
 
 [`camera_from_anchors`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/calibration.py#L81-L92)는 이 행들을 쌓고, 랭크 3을 요구하고, 최소제곱으로 풀어 `P = [h1 h2 p3 h3]`을 조립합니다. 여기서 `h1`, `h2`, `h3`은 `H`의 열입니다. 미지수가 3개이고 앵커당 두 행이므로 앵커 두 개는 방정식 네 개를 주어 거의 정확히 결정됩니다. 그래서 앵커 잔차(`net_anchor_residuals_px`)가 작아도 증명되는 것은 거의 없습니다. 앵커는 높은 위치(`Z > 0.1 m`)에 있어야 하며 최소 두 개가 필요합니다.

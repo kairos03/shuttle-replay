@@ -20,6 +20,13 @@ Installed from PyPI by `uv`; each keeps its own license:
   depending on build, including libx264 under GPL-2.0-or-later). See the PyAV
   project for the exact bundled licenses.
 
+## Vendored documentation assets
+
+- **MathJax 3.2.2** (`docs/_static/mathjax/tex-svg.js`), from the official npm
+  package `mathjax@3.2.2` (https://github.com/mathjax/MathJax), unmodified;
+  Apache License 2.0, copy in `docs/_static/mathjax/LICENSE`. Used only by the
+  documentation site to render equations locally.
+
 ## Upstream tools referenced but not included
 
 This repository contains no code, model definitions or weights from the

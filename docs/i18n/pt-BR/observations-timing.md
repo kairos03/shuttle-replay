@@ -12,10 +12,17 @@ Os contêineres de vídeo armazenam um timestamp de apresentação (PTS) para ca
 frame como uma contagem inteira de ticks, com um `time_base` que diz quanto
 dura um tick. O tempo do frame em segundos é:
 
-```text
- time_s = pts * time_base
+```{math}
+\mathrm{time\_s} = \mathrm{pts} \cdot \mathrm{time\_base}
+```
 
- example: time_base = 1/30000 s, pts = 3003  ->  0.1001 s
+Exemplo:
+
+```{math}
+\begin{aligned}
+\mathrm{time\_base} &= \tfrac{1}{30000}\ \mathrm{s}, \quad \mathrm{pts} = 3003 \\
+\Rightarrow \mathrm{time\_s} &= 3003 \cdot \tfrac{1}{30000}\ \mathrm{s} = 0.1001\ \mathrm{s}
+\end{aligned}
 ```
 
 Muitas gravações de celular e de tela têm **taxa de quadros variável** (VFR):
@@ -91,14 +98,21 @@ agrupa os contatos por segmento e transforma cada contato em um voo. Um voo
 nunca atravessa um segmento de câmera. Suas observações são os frames do
 segmento com uma detecção e
 
-```text
- t0 + contact_guard_s  <  pts_s  <=  t_end - contact_guard_s     (followed by another contact)
- t0 + contact_guard_s  <  pts_s  <=  t_end                       (landing or open end)
-
- t0             reviewed contact time
- t_end          next contact time, landing bracket end, or min(segment end, until_s)
- contact_guard_s  default 0.02 s
+```{math}
+\begin{aligned}
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} - \mathtt{contact\_guard\_s} && (1) \\
+t_0 + \mathtt{contact\_guard\_s} &< \mathrm{pts\_s} \le t_\mathrm{end} && (2)
+\end{aligned}
 ```
+
+(1) o voo é seguido de outro contato;
+(2) pouso ou final aberto.
+
+| Símbolo | Significado |
+|---|---|
+| {math}`t_0` | instante de contato revisado |
+| {math}`t_\mathrm{end}` | instante do próximo contato, fim do intervalo de pouso ou min(fim do segmento, `until_s`) |
+| `contact_guard_s` | padrão 0,02 s |
 
 A guarda descarta detecções bem no momento de um contato, quando a peteca
 muitas vezes se confunde com a raquete. `observation_frame_ids` e
@@ -128,15 +142,15 @@ Existem três amostragens diferentes, e apenas a primeira é por frame de vídeo
 
 ## Tolerâncias que são realmente verificadas
 
-```text
- contact bracket width         <= 0.5 s                  inputs.py
- contact guard                 0.02 s (default)          analysis.py
- renderer PTS match            1e-3 s per frame          render.py
- ODE (simulate)                rtol 1e-7, atol 1e-8, max_step 0.02 s
- ODE (floor_crossing)          rtol 1e-9, atol 1e-10, max_step 0.01 s
- floor gate                    lowest point >= -0.02 m
- landing within_region         region widened by 1e-3 m
-```
+| Verificação | Valor | Fonte |
+|---|---|---|
+| largura do intervalo de contato | ≤ 0.5 s | `inputs.py` |
+| margem de contato | 0.02 s (padrão) | `analysis.py` |
+| correspondência de PTS do renderizador | 1e-3 s por quadro | `render.py` |
+| ODE (`simulate`) | rtol 1e-7, atol 1e-8, max_step 0.02 s | `physics.py` |
+| ODE (`floor_crossing`) | rtol 1e-9, atol 1e-10, max_step 0.01 s | `physics.py` |
+| limiar do piso | ponto mais baixo ≥ -0.02 m | `physics.py` |
+| pouso `within_region` | região ampliada em 1e-3 m | `analysis.py` |
 
 Relacionado: [os esquemas](schemas.md) para cada campo,
 [o fluxo de trabalho](workflow.md) para produzir tracks a partir do seu

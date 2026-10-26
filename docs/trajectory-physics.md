@@ -31,14 +31,34 @@ State is position `r = (x, y, z)` in metres and velocity `v` in m/s. The
 equations of motion
 ([`_rhs`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/physics.py#L16-L23)):
 
-```text
- dr/dt = v
- dv/dt = -k * |v| * v  -  g * e_z
+```{math}
+\begin{aligned}
+\frac{d\mathbf{r}}{dt} &= \mathbf{v} \\
+\frac{d\mathbf{v}}{dt} &= -k \, \lVert \mathbf{v} \rVert \, \mathbf{v} - g \, \mathbf{e}_z
+\end{aligned}
+```
 
- g    gravity, default 9.81 m/s^2 (review "physics": "gravity_m_s2")
- k    drag coefficient per flight, units 1/m
- |v|  speed in m/s
- e_z  unit vector pointing up
+| Symbol | Meaning |
+|---|---|
+| {math}`g` | gravity, default 9.81 m/s², set by review (`"physics": "gravity_m_s2"`) |
+| {math}`k` | drag coefficient per flight, units 1/m |
+| {math}`\lVert \mathbf{v} \rVert` | speed in m/s |
+| {math}`\mathbf{e}_z` | unit vector pointing up |
+
+```{figure} assets/technical/en/trajectory.svg
+:alt: Synthetic example: height versus horizontal distance from the start for drag k = 0.18 1/m and the no-drag case k = 0
+:class: technical-figure
+:width: 100%
+
+Synthetic example from chosen initial conditions, computed with the package's own simulate; not a measurement, a fitted flight or a performance benchmark.
+```
+
+```{figure} assets/technical/en/speed.svg
+:alt: Synthetic example: speed |v| in m/s versus time for drag k = 0.18 1/m and the no-drag case k = 0
+:class: technical-figure
+:width: 100%
+
+Speed of the same synthetic example from the integrated velocity state; the no-drag curve is shown only for contrast.
 ```
 
 Drag points against the motion and grows with the square of speed. A useful
@@ -75,15 +95,30 @@ tolerances (`rtol=1e-9`, `atol=1e-10`, `max_step=0.01`) over a 10 s horizon.
 builds one residual vector. Each entry is a difference divided by a scale, so
 "1" means "one expected error":
 
-```text
- pixels    (project(P, r(t_i)) - uv_i) / pixel_sigma_px            default 3.0 px
- start     (r(0) - contact_prior) / start_sigma                     xy 0.5 m, height 0.3 m
- drag      (k - 0.18) / 0.15
- intercept (r(T) - next_contact_prior) / next_contact_sigma         intercepted only
- landing   z(T) / 0.01   and   distance outside region / 0.02       landing only
- floor     min(z, 0) / 0.01 on 41 samples from 0 to T
- net       max(0, 1.55 - h_net) / 0.02                              only if a crossing is required
+```{math}
+\begin{aligned}
+\rho_\mathrm{pixels} &= \frac{\operatorname{project}(P, \mathbf{r}(t_i)) - \mathbf{uv}_i}{\mathtt{pixel\_sigma\_px}} \\
+\rho_\mathrm{start} &= \frac{\mathbf{r}(0) - \mathtt{contact\_prior}}{\mathtt{start\_sigma}} \\
+\rho_\mathrm{drag} &= \frac{k - 0.18}{0.15} \\
+\rho_\mathrm{intercept} &= \frac{\mathbf{r}(T) - \mathtt{next\_contact\_prior}}{\mathtt{next\_contact\_sigma}} \\
+\mathbf{d}^{-} &= \max\!\left(\mathbf{b}_{\min}-\mathbf{r}_{xy}(T),\mathbf{0}\right) \\
+\mathbf{d}^{+} &= \max\!\left(\mathbf{r}_{xy}(T)-\mathbf{b}_{\max},\mathbf{0}\right) \\
+\mathbf{d}_\mathrm{out} &= \mathbf{d}^{-}+\mathbf{d}^{+} \\
+\rho_\mathrm{landing} &= \left(\frac{z(T)}{0.01},\frac{d_{\mathrm{out},x}}{0.02},\frac{d_{\mathrm{out},y}}{0.02}\right) \\
+\rho_\mathrm{floor} &= \frac{\min(z, 0)}{0.01} \\
+\rho_\mathrm{net} &= \frac{\max(0,\ 1.55 - h_\mathrm{net})}{0.02}
+\end{aligned}
 ```
+
+| Term | Scale or condition |
+|---|---|
+| {math}`\rho_\mathrm{pixels}` | default 3.0 px |
+| {math}`\rho_\mathrm{start}` | xy 0.5 m, height 0.3 m |
+| {math}`\rho_\mathrm{drag}` | always |
+| {math}`\rho_\mathrm{intercept}` | intercepted only |
+| {math}`\rho_\mathrm{landing}` | landing only; three entries: height and the two coordinate-wise region violations. {math}`\mathbf{d}_\mathrm{out}` is a two-component vector; {math}`\mathbf{b}_{\min}` and {math}`\mathbf{b}_{\max}` are the region bounds, and max is applied component-wise |
+| {math}`\rho_\mathrm{floor}` | on 41 samples from 0 to {math}`T` |
+| {math}`\rho_\mathrm{net}` | only if a crossing is required |
 
 `T` is the flight duration. The contact prior comes from
 [`_contact_prior`](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L49-L54):
@@ -104,12 +139,17 @@ speed of `1.0` or `3.0` m/s added to a ballistic guess toward the end target.
 The lowest-cost result wins. Bounds keep the search physical
 ([source](https://github.com/KAIROS03/shuttle-replay/blob/6e9a060b5cc964f02d4017d806e953ffea89c8b4/src/shuttle_replay/analysis.py#L64-L69)):
 
-```text
- x in [-3, 9.1] m     y in [-3, 16.4] m     z in [0.05, 4.5] m
- vx, vy, vz in [-velocity_bound_m_s, +velocity_bound_m_s]    default 120 m/s
- k in drag_bounds_per_m                                      default [0.015, 0.6] 1/m
- landing time T in the reviewed landing bracket (landing flights only)
+```{math}
+\begin{aligned}
+x &\in [-3,\ 9.1]\ \mathrm{m} \\
+y &\in [-3,\ 16.4]\ \mathrm{m} \\
+z &\in [0.05,\ 4.5]\ \mathrm{m} \\
+v_x, v_y, v_z &\in [-v_{\max},\ +v_{\max}] \\
+k &\in \mathtt{drag\_bounds\_per\_m}
+\end{aligned}
 ```
+
+Defaults: {math}`v_{\max}` = `velocity_bound_m_s` 120 m/s; `drag_bounds_per_m` [0.015, 0.6] 1/m. The landing time {math}`T` lies in the reviewed landing bracket (landing flights only).
 
 The seven state/drag parameters are flagged in `parameters_at_bound` when their
 distance from a bound is less than 0.1% of their allowed range

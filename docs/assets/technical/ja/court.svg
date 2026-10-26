@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="ja" width="520" height="744" viewBox="0 0 520 744" role="img" aria-labelledby="title desc" font-family="&#x27;Noto Sans JP&#x27;, &#x27;Hiragino Sans&#x27;, &#x27;Yu Gothic&#x27;, &#x27;Noto Sans CJK JP&#x27;, sans-serif">
+<title id="title">コートのワールド座標系（メートル）</title>
+<desc id="desc">コートの上面図：X は横方向に 0 から 6.10 m、Y は奥のベースライン 0 m から手前のベースライン 13.40 m まで、ネット面は Y = 6.70 m です。側面図は、コート面 Z = 0 から上向きの Z と、ネットの高さ（ポスト 1.55 m、中央 1.524 m）を示します。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#20312b"/></marker></defs>
+<rect x="0.5" y="0.5" width="519" height="743" rx="6" fill="#fbfbf8" stroke="#dfe5e1" stroke-width="1"/>
+<text x="260" y="30" font-size="18" text-anchor="middle" fill="#20312b" font-weight="bold">コートのワールド座標系（メートル）</text>
+<text x="260" y="54.1" font-size="14" text-anchor="middle" fill="#5d6b65">上面図、Z は見る人の方向</text>
+<rect x="96" y="112.4" width="183" height="402" rx="0" fill="#1f6b45" stroke="none" stroke-width="1"/>
+<line x1="96.6" y1="113" x2="278.4" y2="113" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="96.6" y1="513.8" x2="278.4" y2="513.8" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="96.6" y1="113" x2="96.6" y2="513.8" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="278.4" y1="113" x2="278.4" y2="513.8" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="110.4" y1="113" x2="110.4" y2="513.8" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="264.6" y1="113" x2="264.6" y2="513.8" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="96.6" y1="253.4" x2="278.4" y2="253.4" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="96.6" y1="373.4" x2="278.4" y2="373.4" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="96.6" y1="135.8" x2="278.4" y2="135.8" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="96.6" y1="491" x2="278.4" y2="491" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="187.5" y1="113" x2="187.5" y2="253.4" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="187.5" y1="373.4" x2="187.5" y2="513.8" stroke="#ffffff" stroke-width="1.2" stroke-linecap="butt"/>
+<line x1="88.5" y1="313.4" x2="286.5" y2="313.4" stroke="#20312b" stroke-width="3.5" stroke-linecap="butt"/>
+<circle cx="88.5" cy="313.4" r="3.2" fill="#20312b" stroke="none" stroke-width="1"/>
+<circle cx="286.5" cy="313.4" r="3.2" fill="#20312b" stroke="none" stroke-width="1"/>
+<line x1="96" y1="90.4" x2="297" y2="90.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<text x="301" y="94.4" font-size="14" text-anchor="start" fill="#20312b" font-weight="bold">X</text>
+<line x1="60" y1="112.4" x2="60" y2="536.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<text x="60" y="552.4" font-size="14" text-anchor="middle" fill="#20312b" font-weight="bold">Y</text>
+<line x1="96" y1="86.4" x2="96" y2="94.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="96" y="81.4" font-size="13" text-anchor="middle" fill="#20312b">0</text>
+<line x1="187.5" y1="86.4" x2="187.5" y2="94.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="187.5" y="81.4" font-size="13" text-anchor="middle" fill="#20312b">3.05</text>
+<line x1="279" y1="86.4" x2="279" y2="94.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="279" y="81.4" font-size="13" text-anchor="middle" fill="#20312b">6.10</text>
+<line x1="66" y1="112.4" x2="90" y2="112.4" stroke="#5d6b65" stroke-width="0.8" stroke-linecap="butt" stroke-dasharray="2 2"/>
+<circle cx="96" cy="112.4" r="3.4" fill="#ce7317" stroke="none" stroke-width="1"/>
+<circle cx="34" cy="90.4" r="7" fill="#fbfbf8" stroke="#20312b" stroke-width="1.3"/>
+<circle cx="34" cy="90.4" r="2.2" fill="#20312b" stroke="none" stroke-width="1"/>
+<text x="34" y="78.4" font-size="14" text-anchor="middle" fill="#20312b" font-weight="bold">Z</text>
+<line x1="56" y1="112.4" x2="64" y2="112.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="52" y="116.9" font-size="13" text-anchor="end" fill="#20312b">0</text>
+<line x1="281" y1="112.4" x2="291" y2="112.4" stroke="#5d6b65" stroke-width="0.8" stroke-linecap="butt"/>
+<text x="293" y="116.9" font-size="13" text-anchor="start" fill="#20312b">奥のベースライン</text>
+<line x1="56" y1="253.4" x2="64" y2="253.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="52" y="257.9" font-size="13" text-anchor="end" fill="#20312b">4.70</text>
+<line x1="281" y1="253.4" x2="291" y2="253.4" stroke="#5d6b65" stroke-width="0.8" stroke-linecap="butt"/>
+<text x="293" y="257.9" font-size="13" text-anchor="start" fill="#20312b">ショートサービスライン</text>
+<line x1="56" y1="313.4" x2="64" y2="313.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="52" y="317.9" font-size="13" text-anchor="end" fill="#20312b">6.70</text>
+<line x1="281" y1="313.4" x2="291" y2="313.4" stroke="#5d6b65" stroke-width="0.8" stroke-linecap="butt"/>
+<text x="293" y="317.9" font-size="13" text-anchor="start" fill="#20312b" font-weight="bold">ネット, Y = 6.70</text>
+<line x1="56" y1="373.4" x2="64" y2="373.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="52" y="377.9" font-size="13" text-anchor="end" fill="#20312b">8.70</text>
+<line x1="281" y1="373.4" x2="291" y2="373.4" stroke="#5d6b65" stroke-width="0.8" stroke-linecap="butt"/>
+<text x="293" y="377.9" font-size="13" text-anchor="start" fill="#20312b">ショートサービスライン</text>
+<line x1="56" y1="514.4" x2="64" y2="514.4" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="52" y="518.9" font-size="13" text-anchor="end" fill="#20312b">13.40</text>
+<line x1="281" y1="514.4" x2="291" y2="514.4" stroke="#5d6b65" stroke-width="0.8" stroke-linecap="butt"/>
+<text x="293" y="518.9" font-size="13" text-anchor="start" fill="#20312b">手前のベースライン</text>
+<text x="293" y="343.4" font-size="13" text-anchor="start" fill="#5d6b65">ポスト 1.55 m、中央 1.524 m</text>
+<text x="102" y="128.4" font-size="13" text-anchor="start" fill="#ffffff">原点</text>
+<text x="260" y="568.4" font-size="14" text-anchor="middle" fill="#5d6b65">側面図、Z は上向き</text>
+<line x1="69" y1="658.7" x2="471" y2="658.7" stroke="#1f6b45" stroke-width="5" stroke-linecap="butt"/>
+<line x1="69" y1="672.7" x2="489" y2="672.7" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<text x="493" y="676.7" font-size="14" text-anchor="start" fill="#20312b" font-weight="bold">Y</text>
+<line x1="55" y1="658.7" x2="55" y2="588.7" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt" marker-end="url(#arrow)"/>
+<text x="55" y="582.7" font-size="14" text-anchor="middle" fill="#20312b" font-weight="bold">Z</text>
+<line x1="270" y1="658.7" x2="270" y2="612.98" stroke="#20312b" stroke-width="3.5" stroke-linecap="butt"/>
+<line x1="264" y1="612.2" x2="276" y2="612.2" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<line x1="69" y1="668.7" x2="69" y2="676.7" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="69" y="690.7" font-size="13" text-anchor="middle" fill="#20312b">0</text>
+<line x1="270" y1="668.7" x2="270" y2="676.7" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="270" y="690.7" font-size="13" text-anchor="middle" fill="#20312b">6.70</text>
+<line x1="471" y1="668.7" x2="471" y2="676.7" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="471" y="690.7" font-size="13" text-anchor="middle" fill="#20312b">13.40</text>
+<line x1="51" y1="658.7" x2="59" y2="658.7" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="47" y="663.2" font-size="13" text-anchor="end" fill="#20312b">0</text>
+<line x1="51" y1="612.98" x2="59" y2="612.98" stroke="#20312b" stroke-width="1.3" stroke-linecap="butt"/>
+<text x="47" y="617.48" font-size="13" text-anchor="end" fill="#20312b">1.524</text>
+<line x1="61" y1="612.98" x2="262" y2="612.98" stroke="#5d6b65" stroke-width="0.8" stroke-linecap="butt" stroke-dasharray="2 3"/>
+<text x="282" y="608.98" font-size="13" text-anchor="start" fill="#5d6b65">ポスト 1.55 m、中央 1.524 m</text>
+<text x="315" y="648.7" font-size="13" text-anchor="start" fill="#5d6b65">Z = 0：コート面</text>
+<text x="260" y="710.7" font-size="13" text-anchor="middle" fill="#5d6b65">境界の値はラインの外側の縁です。ライン幅は 40 mm で、キャリブレーションに</text>
+<text x="260" y="727.6" font-size="13" text-anchor="middle" fill="#5d6b65">はラインの中心を使います。</text>
+</svg>
