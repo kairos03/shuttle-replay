@@ -18,8 +18,8 @@
 <p align="center">
   <a href="#quick-start">Быстрый старт</a> |
   <a href="#workflow">Порядок работы</a> |
-  <a href="docs/usage.ko.md">Руководство (на корейском)</a> |
-  <a href="docs/schemas.md">Схемы (на английском)</a>
+  <a href="#user-guide">Руководство</a> |
+  <a href="docs/schemas.md">Форматы данных (на английском)</a>
 </p>
 
 ## Обзор
@@ -89,6 +89,8 @@ uv run shuttle-replay calibrate calibration_input.json -o calibration.json
 uv run shuttle-replay run --video match.mp4 --tracks tracks.json --review review.json \
     --calibration calibration.json --out-dir out
 ```
+
+<a id="user-guide"></a>
 
 <details>
 <summary><b>Пошаговое руководство для вашего видео</b></summary>

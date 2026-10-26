@@ -18,8 +18,8 @@
 <p align="center">
   <a href="#quick-start">빠른 시작</a> |
   <a href="#workflow">작업 흐름</a> |
-  <a href="docs/usage.ko.md">한국어 가이드</a> |
-  <a href="docs/schemas.md">스키마 (영문)</a>
+  <a href="#user-guide">사용 가이드</a> |
+  <a href="docs/schemas.md">입력 형식 (영어)</a>
 </p>
 
 ## 개요
@@ -86,6 +86,8 @@ uv run shuttle-replay calibrate calibration_input.json -o calibration.json
 uv run shuttle-replay run --video match.mp4 --tracks tracks.json --review review.json \
     --calibration calibration.json --out-dir out
 ```
+
+<a id="user-guide"></a>
 
 <details>
 <summary><b>내 영상에 적용하는 단계별 가이드</b></summary>

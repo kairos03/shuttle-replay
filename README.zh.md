@@ -18,7 +18,7 @@
 <p align="center">
   <a href="#quick-start">快速开始</a> |
   <a href="#workflow">工作流程</a> |
-  <a href="docs/usage.ko.md">한국어 가이드（韩语指南）</a> |
+  <a href="#user-guide">使用指南</a> |
   <a href="docs/schemas.md">数据格式（英文）</a>
 </p>
 
@@ -83,6 +83,8 @@ uv run shuttle-replay calibrate calibration_input.json -o calibration.json
 uv run shuttle-replay run --video match.mp4 --tracks tracks.json --review review.json \
     --calibration calibration.json --out-dir out
 ```
+
+<a id="user-guide"></a>
 
 <details>
 <summary><b>用于你自己视频的分步指南</b></summary>
