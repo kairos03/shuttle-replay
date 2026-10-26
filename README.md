@@ -1,64 +1,36 @@
-# shuttle-replay
+<p align="center">
+  <img src="docs/assets/header.svg" alt="shuttle-replay" width="100%">
+</p>
 
-Offline, review-driven badminton shuttle replays from a local video, supplied
-detections and human-reviewed annotations.
+<p align="center"><b>Turn a local badminton video, your detections and your review into a side-by-side court replay. Offline.</b></p>
 
-`shuttle-replay` calibrates a broadcast-style camera from reviewed court points
-and net-post anchors, fits gravity + quadratic-drag flights to 2D shuttle
-detections under explicit contact and landing priors, and renders an MP4 with
-the source video (original aspect ratio and timing) beside a top-view court.
+<p align="center">
+  <a href="https://github.com/kairos03/shuttle-replay/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/kairos03/shuttle-replay/ci.yml?branch=main&style=flat-square&label=CI" alt="CI"></a>
+  <img src="https://img.shields.io/badge/python-3.12%2B-3776ab?style=flat-square" alt="Python 3.12+">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0--only-c6f04a?style=flat-square" alt="AGPL-3.0-only"></a>
+  <img src="https://img.shields.io/badge/runs-offline-0d2a1f?style=flat-square" alt="Offline">
+</p>
 
-It is a research and review tool. It is **not** a line-calling system, a shot
-classifier, a shuttle detector, or a measured 3D speed gun. Every 3D position
-and speed it reports is a conditional model output that depends on your
-calibration and annotations.
+<p align="center">
+  <a href="#quick-start">Quick start</a> |
+  <a href="#workflow">Workflow</a> |
+  <a href="docs/usage.ko.md">한국어 가이드</a> |
+  <a href="docs/schemas.md">Schemas</a>
+</p>
 
-한국어 사용 안내: [docs/usage.ko.md](docs/usage.ko.md)
+## Overview
 
-## What v0.1 does
+`shuttle-replay` calibrates a camera from court points you reviewed, fits
+gravity + quadratic-drag flights to the 2D shuttle detections you supply, and
+renders an MP4 with the source video beside a top-view court.
 
-- **Calibration** (`calibrate`): homography from ≥ 4 reviewed floor points,
-  plus the vertical camera column from ≥ 2 elevated net anchors. Held-out floor
-  points are never used for fitting and are reported separately (pixels and
-  metres). Degenerate, duplicate, collinear and non-finite inputs are rejected.
-  The floor homography is never used for airborne points.
-- **Analysis** (`analyze`): one flight per reviewed contact, timed from the
-  reviewed contact (time zero) even when the first detection arrives later.
-  Uses source PTS, frame ids and camera segment ids; camera cuts are excluded
-  and flights never bridge segments. Each flight ends at the next contact
-  (intercepted, not forced to land), at a reviewed landing region (a
-  constraint, not a measured coordinate), or at the last observation of the
-  segment. Floor and net gates reject infeasible fits. Where a flight was
-  intercepted, the floor point it *would* have reached is reported separately
-  as a counterfactual. Missing detections stay null.
-- **Rendering** (`render`): verifies every decoded source frame against the
-  track PTS, draws supplied player boxes, observed shuttle rings (green) and
-  model rings (orange), and a top-view court in a 6:4 source/top-view layout.
-  Camera-cut frames get no shuttle overlay. Source audio packets are
-  stream-copied unchanged (no re-encoding), so the source's audio start offset
-  and gaps are kept; the render fails if the audio cannot be copied into MP4 or
-  its timing changes. No shell commands are built from file names. Outputs are
-  never overwritten: rendering fails if the output exists or aliases the source,
-  writes to a unique staging file, and publishes it only after a full decode check.
-- **Demo** (`demo`): generates a fully synthetic rally (two virtual cameras, a
-  camera cut, noisy detections with gaps, a test tone) and runs the whole
-  pipeline, including a synthetic ground-truth recovery report.
-
-## What v0.1 does not do
-
-- It does not detect shuttles or players. You supply detections in the
-  [tracks format](docs/schemas.md). There is no built-in detector and no model
-  weights are downloaded.
-- It does not find contacts or refine contact timestamps automatically. You
-  review and enter contact times, heights and positions.
-- No learned dense-depth maps, no learned shot labels, no automatic IN/OUT calls.
-- Low reprojection error shows the model is consistent with the 2D detections.
-  It is not independent proof of 3D accuracy. Synthetic recovery results are
-  synthetic.
+It is a research and review tool, not a line-calling system, shot classifier,
+shuttle detector or measured 3D speed gun. Every 3D position and speed is a
+conditional model output that depends on your calibration and annotations.
 
 ## Install
 
-Requires Python ≥ 3.12 and [uv](https://docs.astral.sh/uv/).
+Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone https://github.com/KAIROS03/shuttle-replay
@@ -69,7 +41,14 @@ uv run shuttle-replay --help
 
 PyAV wheels include FFmpeg, so no system FFmpeg is required.
 
-## Quick start (synthetic demo)
+## Why use it
+
+- **Fully offline.** No detector, no model weights, no network calls.
+- **Human review first.** Contacts, landing regions and calibration points come from you; nothing is silently repaired.
+- **Honest layers.** Observed pixels, your review and the conditional model are kept apart in the output.
+- **Safe rendering.** Source audio is stream-copied without re-encoding, and existing files are never overwritten.
+
+## Quick start
 
 ```bash
 uv run shuttle-replay demo --out-dir demo
@@ -79,7 +58,31 @@ Writes `demo/inputs/` (synthetic video, tracks, review, calibration input),
 `demo/calibration.json`, `demo/analysis.json`, `demo/replay.mp4`,
 `demo/render_report.json` and `demo/synthetic_recovery.json`.
 
-## Your own video
+<p align="center">
+  <img src="docs/assets/demo.gif" alt="Synthetic demo replay: source view beside top-view court" width="90%">
+  <br><sub>Synthetic demonstration generated by <code>demo</code>. Not a measure of real-world accuracy.</sub>
+</p>
+
+## Workflow
+
+What you must provide for your own video:
+
+- **Detections** (`tracks.json`): one entry per decoded frame with PTS, camera
+  segment id, shuttle pixel or null, optional player boxes. There is no
+  built-in detector.
+- **Calibration input**: per segment, at least 4 `fit` court points, a few
+  `heldout` points, and both net post tops (1.55 m).
+- **Review** (`review.json`): contact times, pixels and heights you reviewed,
+  plus optional landing regions. Contacts are not found automatically.
+
+```bash
+uv run shuttle-replay calibrate calibration_input.json -o calibration.json
+uv run shuttle-replay run --video match.mp4 --tracks tracks.json --review review.json \
+    --calibration calibration.json --out-dir out
+```
+
+<details>
+<summary><b>Step-by-step guide for your own video</b></summary>
 
 1. **Detections.** Produce one `tracks.json` entry per decoded frame with the
    frame's PTS, a camera segment id (null for cuts/close-ups), the shuttle pixel
@@ -115,7 +118,42 @@ Writes `demo/inputs/` (synthetic video, tracks, review, calibration input),
    outside their segment or bracket, PTS that do not match the video, …) stop
    with exit code 2 and a message; nothing is silently repaired.
 
-## Reading the output
+</details>
+
+<details>
+<summary><b>What each command does</b></summary>
+
+- **Calibration** (`calibrate`): homography from ≥ 4 reviewed floor points,
+  plus the vertical camera column from ≥ 2 elevated net anchors. Held-out floor
+  points are never used for fitting and are reported separately (pixels and
+  metres). Degenerate, duplicate, collinear and non-finite inputs are rejected.
+  The floor homography is never used for airborne points.
+- **Analysis** (`analyze`): one flight per reviewed contact, timed from the
+  reviewed contact (time zero) even when the first detection arrives later.
+  Uses source PTS, frame ids and camera segment ids; camera cuts are excluded
+  and flights never bridge segments. Each flight ends at the next contact
+  (intercepted, not forced to land), at a reviewed landing region (a
+  constraint, not a measured coordinate), or at the last observation of the
+  segment. Floor and net gates reject infeasible fits. Where a flight was
+  intercepted, the floor point it *would* have reached is reported separately
+  as a counterfactual. Missing detections stay null.
+- **Rendering** (`render`): verifies every decoded source frame against the
+  track PTS, draws supplied player boxes, observed shuttle rings (green) and
+  model rings (orange), and a top-view court in a 6:4 source/top-view layout.
+  Camera-cut frames get no shuttle overlay. Source audio packets are
+  stream-copied unchanged (no re-encoding), so the source's audio start offset
+  and gaps are kept; the render fails if the audio cannot be copied into MP4 or
+  its timing changes. No shell commands are built from file names. Outputs are
+  never overwritten: rendering fails if the output exists or aliases the source,
+  writes to a unique staging file, and publishes it only after a full decode check.
+- **Demo** (`demo`): generates a fully synthetic rally (two virtual cameras, a
+  camera cut, noisy detections with gaps, a test tone) and runs the whole
+  pipeline, including a synthetic ground-truth recovery report.
+
+</details>
+
+<details>
+<summary><b>Reading the output</b></summary>
 
 | Layer | Meaning |
 | --- | --- |
@@ -127,7 +165,23 @@ Writes `demo/inputs/` (synthetic video, tracks, review, calibration input),
 Speeds are the initial speed of the fitted model (`model_speed_km_h`, shown
 rounded to 5 km/h). Treat them as rough model values.
 
-## Development
+</details>
+
+<details>
+<summary><b>Limits</b></summary>
+
+- No shuttle or player detection. You supply detections in the
+  [tracks format](docs/schemas.md); no model weights are downloaded.
+- No automatic contact finding or contact timestamp refinement.
+- No learned dense-depth maps, no learned shot labels, no automatic IN/OUT calls.
+- 3D output is conditional, not measured. Low reprojection error shows
+  consistency with the 2D detections, not independent proof of 3D accuracy.
+  Synthetic recovery results are synthetic.
+
+</details>
+
+<details>
+<summary><b>Development</b></summary>
 
 ```bash
 uv run pytest
@@ -135,7 +189,12 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-## License
+</details>
+
+<details>
+<summary><b>License</b></summary>
 
 GNU Affero General Public License v3.0 only (`AGPL-3.0-only`). See
 [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for third-party notices.
+
+</details>

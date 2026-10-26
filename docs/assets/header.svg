@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="t d">
+  <title id="t">shuttle-replay</title>
+  <desc id="d">Wordmark over a dark green badminton court with an orange shuttle flight arc.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d2a1f"/>
+      <stop offset="1" stop-color="#081a13"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="400" fill="url(#bg)"/>
+  <g fill="none" stroke="#f4efdc" stroke-opacity="0.16" stroke-width="2">
+    <polygon points="250,360 950,360 840,250 360,250"/>
+    <line x1="600" y1="250" x2="600" y2="360"/>
+    <line x1="300" y1="310" x2="900" y2="310"/>
+    <line x1="270" y1="340" x2="930" y2="340"/>
+  </g>
+  <line x1="600" y1="300" x2="600" y2="210" stroke="#f4efdc" stroke-opacity="0.25" stroke-width="3"/>
+  <path d="M120 330 Q 480 -10 1080 300" fill="none" stroke="#ff7a2f" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 14"/>
+  <circle cx="1080" cy="300" r="9" fill="#ff7a2f"/>
+  <circle cx="1080" cy="300" r="18" fill="none" stroke="#ff7a2f" stroke-opacity="0.5" stroke-width="2"/>
+  <text x="600" y="190" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="112" font-weight="700" letter-spacing="-2" fill="#f4efdc">shuttle<tspan fill="#c6f04a">-</tspan>replay</text>
+  <text x="600" y="240" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="28" letter-spacing="6" fill="#c6f04a">OFFLINE  REVIEW-DRIVEN  BADMINTON REPLAYS</text>
+</svg>
