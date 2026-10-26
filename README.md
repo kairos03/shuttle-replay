@@ -19,7 +19,8 @@
   <a href="#quick-start">Quick start</a> |
   <a href="#workflow">Workflow</a> |
   <a href="#user-guide">Usage guide</a> |
-  <a href="docs/schemas.md">Schemas (English)</a>
+  <a href="docs/schemas.md">Schemas (English)</a> |
+  <a href="https://kairos03.github.io/shuttle-replay/">Docs</a>
 </p>
 
 ## Overview
@@ -193,6 +194,13 @@ rounded to 5 km/h). Treat them as rough model values.
 uv run pytest
 uv run ruff check .
 uv run ruff format --check .
+```
+
+Build the docs site locally (strict, warnings are errors):
+
+```bash
+uv sync --locked --only-group docs
+uv run --only-group docs sphinx-build -n -W --keep-going -b html docs docs/_build/html
 ```
 
 </details>

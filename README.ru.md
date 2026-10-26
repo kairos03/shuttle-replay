@@ -19,7 +19,8 @@
   <a href="#quick-start">Быстрый старт</a> |
   <a href="#workflow">Порядок работы</a> |
   <a href="#user-guide">Руководство</a> |
-  <a href="docs/schemas.md">Форматы данных (на английском)</a>
+  <a href="docs/schemas.md">Форматы данных (на английском)</a> |
+  <a href="https://kairos03.github.io/shuttle-replay/">Документация</a>
 </p>
 
 ## Обзор

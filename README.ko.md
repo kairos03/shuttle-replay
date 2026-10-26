@@ -19,7 +19,8 @@
   <a href="#quick-start">빠른 시작</a> |
   <a href="#workflow">작업 흐름</a> |
   <a href="#user-guide">사용 가이드</a> |
-  <a href="docs/schemas.md">입력 형식 (영어)</a>
+  <a href="docs/schemas.md">입력 형식 (영어)</a> |
+  <a href="https://kairos03.github.io/shuttle-replay/">문서</a>
 </p>
 
 ## 개요

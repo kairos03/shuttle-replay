@@ -11,3 +11,4 @@ out/
 *.pt
 *.pth
 *.onnx
+docs/_build/
