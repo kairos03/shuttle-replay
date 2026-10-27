@@ -11,7 +11,23 @@ export const LIMITS = Object.freeze({
   maxSegments: 1000,
   maxIdLength: 200,
   maxAbsCoord: 1e6,
+  maxPlayersPerFrame: 16,
+  maxCalibrationAnchors: 64,
+  maxAbsCourtM: 100,
+  maxStatusLength: 80,
+  maxAssumptions: 32,
+  maxNoteLength: 1000,
 });
+
+const SHUTTLE_MAP_TOP_STATUS = new Set(["conditional_reference", "unavailable"]);
+const SHUTTLE_MAP_REF_STATUS = new Set(["estimated", "interpolated", "reference"]);
+const SAME_XY_M = 1e-6;
+const SAME_PTS_S = 1e-6;
+
+import { PLAYER_IDS, PLAYER_SHORT } from "./players.js";
+
+const PLAYER_ID_SET = new Set(PLAYER_IDS);
+const CALIBRATION_STATUS = new Set(["manual_reference", "unavailable"]);
 
 const LAYERS = new Set(["excluded_camera_cut", "conditional_model", "observed_pixel", "none"]);
 
@@ -50,6 +66,207 @@ function text(v, where, { optional = false } = {}) {
     fail(`${where}: 문자열 식별자가 필요합니다.`);
   }
   return v;
+}
+
+function shortText(v, where) {
+  if (v === null || v === undefined) return null;
+  if (typeof v !== "string") fail(`${where}: 문자열이어야 합니다.`);
+  return v.slice(0, LIMITS.maxStatusLength);
+}
+
+function courtPoint(v, where) {
+  const p = point(v, 2, where);
+  if (p && (Math.abs(p[0]) > LIMITS.maxAbsCourtM || Math.abs(p[1]) > LIMITS.maxAbsCourtM)) {
+    fail(`${where}: court_xy_m 값이 코트 기준으로 너무 큽니다.`);
+  }
+  return p;
+}
+
+const unit = (v) => finite(v) && v >= 0 && v <= 1;
+
+/**
+ * Optional top-level player_calibration. Projection (use of per-frame court_xy_m) is
+ * permitted only for a manual_reference with a finite, non-degenerate 3x3 homography and
+ * at least four anchors. Absent or unavailable => no floor positions are kept.
+ */
+function parsePlayerCalibration(c) {
+  const none = Object.freeze({ status: "unavailable", h: null, anchors: Object.freeze([]), note: null, permitsProjection: false });
+  if (c === undefined || c === null) return none;
+  const where = "player_calibration";
+  if (!isObj(c)) fail(`${where} 가 객체가 아닙니다.`);
+  if (!CALIBRATION_STATUS.has(c.status)) fail(`${where}.status 를 알 수 없습니다.`);
+  let h = null;
+  if (c.image_to_court_h !== null && c.image_to_court_h !== undefined) {
+    const rows = c.image_to_court_h;
+    if (!Array.isArray(rows) || rows.length !== 3) fail(`${where}.image_to_court_h 는 3x3 행렬이어야 합니다.`);
+    h = Object.freeze(rows.map((r, i) => point(r, 3, `${where}.image_to_court_h[${i}]`)));
+  }
+  const rawAnchors = c.anchors === undefined || c.anchors === null ? [] : c.anchors;
+  if (!Array.isArray(rawAnchors) || rawAnchors.length > LIMITS.maxCalibrationAnchors) fail(`${where}.anchors 배열이 올바르지 않습니다.`);
+  const anchors = rawAnchors.map((a, i) => {
+    const w = `${where}.anchors[${i}]`;
+    if (!isObj(a)) fail(`${w} 가 객체가 아닙니다.`);
+    const imagePx = point(a.image_px, 2, `${w}.image_px`);
+    const courtXy = courtPoint(a.court_xy_m, `${w}.court_xy_m`);
+    if (!imagePx || !courtXy) fail(`${w}: image_px 와 court_xy_m 이 필요합니다.`);
+    return Object.freeze({ imagePx, courtXy, label: shortText(a.label, `${w}.label`) });
+  });
+  const det = h
+    ? h[0][0] * (h[1][1] * h[2][2] - h[1][2] * h[2][1]) -
+      h[0][1] * (h[1][0] * h[2][2] - h[1][2] * h[2][0]) +
+      h[0][2] * (h[1][0] * h[2][1] - h[1][1] * h[2][0])
+    : 0;
+  const permitsProjection = c.status === "manual_reference" && h !== null && Math.abs(det) > 1e-12 && anchors.length >= 4;
+  return Object.freeze({
+    status: c.status,
+    h,
+    anchors: Object.freeze(anchors),
+    note: typeof c.note === "string" ? c.note.slice(0, LIMITS.maxIdLength) : null,
+    permitsProjection,
+  });
+}
+
+/**
+ * Optional top-level shuttle_map_reference: display-only conditional court estimate of the
+ * shuttle (camera/height/flight hypothesis), never measured 3D. Unknown extra keys are ignored.
+ */
+function parseShuttleMapTop(c) {
+  const none = Object.freeze({ status: "unavailable", method: null, note: null, assumptions: Object.freeze([]), coordinateSystem: null });
+  if (c === undefined || c === null) return none;
+  const where = "shuttle_map_reference";
+  if (!isObj(c)) fail(`${where} 가 객체가 아닙니다.`);
+  if (!SHUTTLE_MAP_TOP_STATUS.has(c.status)) fail(`${where}.status 를 알 수 없습니다.`);
+  const str = (v, w, max) => {
+    if (v === undefined || v === null) return null;
+    if (typeof v !== "string") fail(`${where}.${w} 는 문자열이어야 합니다.`);
+    return v.slice(0, max);
+  };
+  const raw = c.assumptions === undefined || c.assumptions === null ? [] : c.assumptions;
+  if (!Array.isArray(raw) || raw.length > LIMITS.maxAssumptions) fail(`${where}.assumptions 배열이 올바르지 않습니다.`);
+  const assumptions = raw.map((a, i) => str(a, `assumptions[${i}]`, LIMITS.maxNoteLength) ?? fail(`${where}.assumptions[${i}] 가 비어 있습니다.`));
+  let coordinateSystem = null;
+  if (c.coordinate_system !== undefined && c.coordinate_system !== null) {
+    if (!isObj(c.coordinate_system)) fail(`${where}.coordinate_system 이 객체가 아닙니다.`);
+    // Only short string facts are kept (shown with textContent); nested values are ignored.
+    const kept = Object.entries(c.coordinate_system)
+      .filter(([, v]) => typeof v === "string")
+      .slice(0, 16)
+      .map(([k, v]) => [k.slice(0, LIMITS.maxStatusLength), v.slice(0, LIMITS.maxIdLength)]);
+    coordinateSystem = Object.freeze(Object.fromEntries(kept));
+  }
+  return Object.freeze({
+    status: c.status,
+    method: str(c.method, "method", LIMITS.maxIdLength),
+    note: str(c.note, "note", LIMITS.maxNoteLength),
+    assumptions: Object.freeze(assumptions),
+    coordinateSystem,
+  });
+}
+
+/** One frame's shuttle_map_reference: shape only; cross-frame checks run after all frames parse. */
+function parseShuttleMapRef(r, where, segmentKey, flightsById) {
+  if (r === undefined || r === null) return null;
+  const w = `${where}.shuttle_map_reference`;
+  if (!isObj(r)) fail(`${w} 가 객체가 아닙니다.`);
+  if (!SHUTTLE_MAP_REF_STATUS.has(r.status)) fail(`${w}.status 를 알 수 없습니다.`);
+  const xy = courtPoint(r.xy_m, `${w}.xy_m`);
+  if (!xy) fail(`${w}.xy_m 이 필요합니다.`);
+  const xyz = point(r.xyz_m, 3, `${w}.xyz_m`);
+  if (xyz && (Math.abs(xyz[0] - xy[0]) > SAME_XY_M || Math.abs(xyz[1] - xy[1]) > SAME_XY_M || Math.abs(xyz[2]) > LIMITS.maxAbsCourtM)) {
+    fail(`${w}: xy_m 이 xyz_m 의 앞 두 값과 다릅니다.`);
+  }
+  const flightId = text(r.flight_id, `${w}.flight_id`, { optional: true });
+  // A known flight id must belong to this frame's segment; unknown ids stay opaque labels.
+  const fl = flightId === null ? null : flightsById.get(flightId);
+  if (fl && segmentKey !== null && fl.segmentKey !== segmentKey) fail(`${w}.flight_id 의 segment 가 프레임과 다릅니다.`);
+  const refId = r.reference_frame_id ?? null;
+  const refPts = r.reference_pts_s ?? null;
+  if (refId !== null && !Number.isInteger(refId)) fail(`${w}.reference_frame_id 가 정수가 아닙니다.`);
+  if (refPts !== null && !finite(refPts)) fail(`${w}.reference_pts_s 가 유한한 숫자가 아닙니다.`);
+  if ((refId === null) !== (refPts === null)) fail(`${w}: reference_frame_id 와 reference_pts_s 는 함께 있어야 합니다.`);
+  if (r.status === "reference" && refId === null) fail(`${w}: 참조 상태에는 reference_frame_id 가 필요합니다.`);
+  return Object.freeze({ xy, xyz, status: r.status, referenceFrameId: refId, referencePts: refPts, flightId });
+}
+
+/**
+ * Bounded O(N) cross-frame pass: a reference hold points at a different estimated seed frame
+ * in the same segment, keeps that seed's own pts (never refreshed) and its position.
+ * Other statuses may name a seed only under the same segment/time rules.
+ */
+function checkShuttleMapRefs(frames, refs) {
+  const byId = new Map();
+  frames.forEach((fr, i) => byId.set(fr.frameId, i));
+  refs.forEach((r, i) => {
+    if (!r || r.referenceFrameId === null) return;
+    const w = `frames[${i}].shuttle_map_reference`;
+    const j = byId.get(r.referenceFrameId);
+    if (j === undefined) fail(`${w}: 존재하지 않는 reference_frame_id 입니다.`);
+    const seed = frames[j];
+    if (frames[i].segmentKey === null || seed.segmentKey !== frames[i].segmentKey) fail(`${w}: 참조 프레임의 segment 가 다릅니다.`);
+    if (Math.abs(seed.pts - r.referencePts) > SAME_PTS_S) fail(`${w}: reference_pts_s 가 참조 프레임 pts 와 다릅니다.`);
+    if (r.status !== "reference") {
+      if (j !== i) fail(`${w}: 추정/보간 상태는 자기 프레임만 참조할 수 있습니다.`);
+      return;
+    }
+    if (j === i) fail(`${w}: 참조 상태가 자기 자신을 가리킵니다.`);
+    const s = refs[j];
+    if (!s || s.status !== "estimated") fail(`${w}: 참조 프레임에 계산된 추정 위치가 없습니다.`);
+    if (Math.abs(s.xy[0] - r.xy[0]) > SAME_XY_M || Math.abs(s.xy[1] - r.xy[1]) > SAME_XY_M) fail(`${w}: 참조 위치가 참조 프레임과 다릅니다.`);
+  });
+}
+
+// Older v1 files carry two inherited {label, score, box} entries: accepted, never drawn.
+const isLegacyPlayer = (p) => isObj(p) && !("id" in p) && "label" in p;
+
+/** Optional per-frame players. Excluded frames and frames without projection lose nothing else. */
+function parsePlayers(raw, where, { excluded, permitsProjection }) {
+  if (raw === undefined || raw === null) return Object.freeze([]);
+  if (!Array.isArray(raw)) fail(`${where}.players 는 배열이어야 합니다.`);
+  if (raw.length > LIMITS.maxPlayersPerFrame) fail(`${where}.players 가 너무 많습니다 (최대 ${LIMITS.maxPlayersPerFrame}).`);
+  const legacy = raw.filter(isLegacyPlayer).length;
+  if (legacy > 0) {
+    if (legacy !== raw.length) fail(`${where}.players: 이전 형식과 새 형식이 섞여 있습니다.`);
+    return null;
+  }
+  const seen = new Set();
+  const out = raw.map((p, i) => {
+    const w = `${where}.players[${i}]`;
+    if (!isObj(p)) fail(`${w} 가 객체가 아닙니다.`);
+    if (!PLAYER_ID_SET.has(p.id)) fail(`${w}.id: 알 수 없는 선수 id 입니다.`);
+    if (seen.has(p.id)) fail(`${w}.id: 선수 id 가 중복됩니다.`);
+    seen.add(p.id);
+    const box = point(p.box_px, 4, `${w}.box_px`);
+    if (!box) fail(`${w}.box_px 가 필요합니다.`);
+    if (box[2] < box[0] || box[3] < box[1]) fail(`${w}.box_px: x2/y2 가 x1/y1 보다 작습니다.`);
+    const anchor = point(p.anchor_px, 2, `${w}.anchor_px`);
+    const courtXy = courtPoint(p.court_xy_m, `${w}.court_xy_m`);
+    let keypoints = null;
+    if (p.keypoints !== null && p.keypoints !== undefined) {
+      if (!Array.isArray(p.keypoints) || p.keypoints.length !== 17) fail(`${w}.keypoints 는 17개여야 합니다.`);
+      keypoints = Object.freeze(
+        p.keypoints.map((k, j) => {
+          const q = point(k, 3, `${w}.keypoints[${j}]`);
+          if (!q || !unit(q[2])) fail(`${w}.keypoints[${j}]: score 는 0~1 이어야 합니다.`);
+          return q;
+        }),
+      );
+    }
+    if (p.score !== null && p.score !== undefined && !unit(p.score)) fail(`${w}.score 는 0~1 숫자여야 합니다.`);
+    return Object.freeze({
+      id: p.id,
+      short: PLAYER_SHORT[p.id],
+      box,
+      anchor,
+      // Floor position only under a validated manual reference; never derived here.
+      courtXy: permitsProjection ? courtXy : null,
+      keypoints,
+      score: finite(p.score) ? p.score : null,
+      status: shortText(p.status, `${w}.status`),
+      anchorStatus: shortText(p.anchor_status, `${w}.anchor_status`),
+    });
+  });
+  // Excluded camera-cut frames never carry drawable players, whatever the file says.
+  return Object.freeze(excluded ? [] : out);
 }
 
 /** Parse untrusted JSON text into a validated, frozen viewer model. */
@@ -126,6 +343,12 @@ export function validateAnalysis(obj) {
     return flight;
   });
 
+  const playerCalibration = parsePlayerCalibration(obj.player_calibration);
+  const shuttleMapReference = parseShuttleMapTop(obj.shuttle_map_reference);
+  const mapRefs = [];
+  let hasPlayers = false;
+  let legacyPlayerEntries = 0;
+
   // Frames
   const rawFrames = obj.frames;
   if (!Array.isArray(rawFrames) || rawFrames.length === 0) fail("frames 가 비어 있습니다.");
@@ -166,7 +389,18 @@ export function validateAnalysis(obj) {
     } else if (modelPx || modelXyz) {
       fail(`${where}: model_flight_id 없이 모델 좌표가 있습니다.`);
     }
-    return Object.freeze({
+    let players = parsePlayers(f.players, where, {
+      excluded: key === null,
+      permitsProjection: playerCalibration.permitsProjection,
+    });
+    if (players === null) {
+      legacyPlayerEntries += f.players.length;
+      players = Object.freeze([]);
+    } else if (Array.isArray(f.players) && f.players.length > 0) hasPlayers = true;
+    // Validated even on cut frames; drawable only inside a segment.
+    const mapRef = parseShuttleMapRef(f.shuttle_map_reference, where, key, flightsById);
+    mapRefs.push(key === null ? null : mapRef);
+    return {
       index: i,
       frameId: f.frame_id,
       pts: f.pts_s,
@@ -176,8 +410,20 @@ export function validateAnalysis(obj) {
       modelPx,
       modelXyz,
       modelFlightId: flightId,
-    });
+      players,
+      shuttleMapRef: null,
+    };
   });
+
+  checkShuttleMapRefs(frames, mapRefs);
+  // Top unavailable (or absent) => no drawable map references at all.
+  const mapOn = shuttleMapReference.status === "conditional_reference";
+  let hasShuttleMapRef = false;
+  for (const fr of frames) {
+    fr.shuttleMapRef = mapOn ? mapRefs[fr.index] : null;
+    if (fr.shuttleMapRef) hasShuttleMapRef = true;
+    Object.freeze(fr);
+  }
 
   const model = {
     schema: SCHEMA,
@@ -189,6 +435,11 @@ export function validateAnalysis(obj) {
     frames: Object.freeze(frames),
     pts,
     nominalFrameS: medianStep(pts),
+    playerCalibration,
+    hasPlayers,
+    legacyPlayerEntries,
+    shuttleMapReference,
+    hasShuttleMapRef,
   };
   model.flightWindowEnds = flightWindowEnds(flights, segments);
   model.flightOfFrame = flightContexts(frames, flights, model.flightWindowEnds);

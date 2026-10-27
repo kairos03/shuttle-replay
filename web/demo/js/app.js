@@ -1,46 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// DOM wiring for the shuttle-replay static viewer. All file and JSON text is
-// rendered with textContent only.
+// DOM wiring for the minimal shuttle-replay viewer: the bundled real clip with its
+// analysis, or a video the user picks (browser-local blob URL, no analysis). All file
+// names and messages are rendered with textContent only.
 
-import {
-  durationMismatch,
-  firstFrameAtOrAfter,
-  frameState,
-  inImage,
-  lookupFrame,
-  outOfBoundsCount,
-  parseAnalysisText,
-  seekTimeForIndex,
-  stepIndex,
-  toAnalysisTime,
-  toVideoTime,
-  trailIndices,
-} from "./analysis-model.js";
+import { frameState, inImage, lookupFrame, parseAnalysisText, toAnalysisTime, toVideoTime, trailIndices } from "./analysis-model.js";
 import { COURT } from "../assets/court-data.js";
 import { FrameClock } from "./frame-clock.js";
 import { containTransform, mapTrailRuns } from "./view-geometry.js";
 import { PairLoader } from "./pair-loader.js";
+import { plainCopy } from "./presentation.js";
+import { ANKLES, PLAYER_COLORS, courtMarkerVisible, fitLabel, playerTrail } from "./players.js";
+import { SHUTTLE_MAP_COLOR, shuttleEdgeArrow, shuttleLabelBox, shuttleRefLabel, shuttleRefTrail } from "./shuttle-map.js";
 
-const SAMPLE_DIR = "assets/sample/";
+const SAMPLE_DIR = "assets/real/";
+const OFFSET = 0; // analysis time = video time; the bundled pair starts at PTS 0
 const COLORS = { observed: "#2fe36b", model: "#ff8a1f", line: "#e9efe9", net: "#ffffff" };
 const PROBE_TIMEOUT_MS = 15000;
+const NO_ANALYSIS = "선택한 영상, 분석 결과 없음";
 
 const $ = (id) => document.getElementById(id);
 const el = {
-  video: $("video"), overlay: $("cv-overlay"), court: $("cv-court"), strip: $("cv-strip"),
-  videoBox: $("video-box"), videoMsg: $("video-msg"), range: $("rng-time"),
-  play: $("btn-play"), prev: $("btn-prev"), next: $("btn-next"), speed: $("sel-speed"),
-  sound: $("btn-sound"), tgObserved: $("tg-observed"), tgModel: $("tg-model"), tgTrail: $("tg-trail"),
-  roTime: $("ro-time"), roFrame: $("ro-frame"), roSeg: $("ro-seg"), roFlight: $("ro-flight"),
-  roZ: $("ro-z"), roState: $("ro-state"), flightList: $("flight-list"), flightEmpty: $("flight-empty"),
-  inVideo: $("in-video"), inAnalysis: $("in-analysis"), inOffset: $("in-offset"),
-  apply: $("btn-apply"), sample: $("btn-sample"), fileMsg: $("file-msg"), badge: $("data-badge"),
+  video: $("video"), overlay: $("cv-overlay"), court: $("cv-court"), videoMsg: $("video-msg"),
+  range: $("rng-time"), play: $("btn-play"), inVideo: $("in-video"), inVideoFirst: $("in-video-first"), demo: $("btn-demo"),
+  sample: $("btn-sample"), chooser: $("chooser"), sourceActions: $("source-actions"),
+  sourceMsg: $("source-msg"), sourceState: $("source-state"), sourceName: $("source-name"), courtCue: $("court-cue"),
 };
 
-const state = {
-  model: null, meta: null, offset: 0, index: -1, lookup: "before",
-  videoError: null, warning: null, renderedFlight: null,
-};
+const state = { model: null, meta: null, videoError: null };
 
 // ---------- loading ----------
 
@@ -58,14 +44,11 @@ function probeVideo(url) {
       fn(arg);
     };
     v.onloadedmetadata = () => {
-      if (!v.videoWidth || !v.videoHeight) {
-        done(reject, new Error("영상 트랙이 없거나 크기를 알 수 없습니다."));
-      } else {
-        done(resolve, { width: v.videoWidth, height: v.videoHeight, duration: v.duration });
-      }
+      if (!v.videoWidth || !v.videoHeight) done(reject, new Error("영상 트랙이 없습니다."));
+      else done(resolve, { width: v.videoWidth, height: v.videoHeight, duration: v.duration });
     };
-    v.onerror = () => done(reject, new Error("이 브라우저가 재생할 수 없는 영상 형식입니다 (H.264 MP4 또는 VP9 WebM 권장)."));
-    timer = setTimeout(() => done(reject, new Error("영상 메타데이터를 읽는 데 시간이 너무 오래 걸립니다.")), PROBE_TIMEOUT_MS);
+    v.onerror = () => done(reject, new Error("이 브라우저가 재생할 수 없는 영상입니다."));
+    timer = setTimeout(() => done(reject, new Error("영상을 읽는 데 너무 오래 걸립니다.")), PROBE_TIMEOUT_MS);
     v.src = url;
   });
 }
@@ -78,145 +61,140 @@ const loader = new PairLoader({
   revokeURL: (url) => URL.revokeObjectURL(url),
 });
 
-function sampleVideoURL() {
-  const probe = document.createElement("video");
-  if (probe.canPlayType('video/mp4; codecs="avc1.42E01E"')) return SAMPLE_DIR + "synthetic_rally.mp4";
-  return SAMPLE_DIR + "synthetic_rally.webm";
-}
-
-function setFileMsg(text, isError = false) {
-  el.fileMsg.textContent = text;
-  el.fileMsg.classList.toggle("error", isError);
+function setSourceMsg(text, name = "", isError = false) {
+  el.sourceState.textContent = text;
+  el.sourceName.textContent = name;
+  el.sourceName.title = name;
+  el.sourceMsg.classList.toggle("error", isError);
 }
 
 async function loadSample() {
-  setFileMsg("샘플 불러오는 중…");
+  const gen = loader.cancel(); // a reset supersedes any in-flight user selection
+  setSourceMsg("불러오는 중…");
   let text;
-  const gen = loader.generation;
   try {
     const res = await fetch(SAMPLE_DIR + "analysis.json", { cache: "no-cache" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     text = await res.text();
   } catch (e) {
     if (gen !== loader.generation) return;
-    setFileMsg(`샘플 분석 파일을 읽지 못했습니다 (${String(e.message).slice(0, 80)}). 로컬 웹 서버로 열어 주세요 (README 참고).`, true);
+    setSourceMsg(`데모 분석을 읽지 못했습니다 (${String(e.message).slice(0, 60)}).`, "", true);
     return;
   }
-  if (gen !== loader.generation) return; // a newer local selection was applied meanwhile
-  const result = await loader.apply({ video: { url: sampleVideoURL() }, analysis: { text }, label: null });
-  finishApply(result, 0, true);
+  if (gen !== loader.generation) return; // a newer selection was made meanwhile
+  const result = await loader.apply({ video: { url: SAMPLE_DIR + "source_clip.mp4" }, analysis: { text }, label: null });
+  finishApply(result);
 }
 
-async function applyLocal() {
-  const vf = el.inVideo.files && el.inVideo.files[0];
-  const af = el.inAnalysis.files && el.inAnalysis.files[0];
-  if (!vf || !af) return;
-  const offset = Number(el.inOffset.value);
-  if (!Number.isFinite(offset) || Math.abs(offset) > 86400) {
-    setFileMsg("시간 오프셋이 올바른 숫자가 아닙니다.", true);
-    return;
-  }
-  setFileMsg("파일 검사 중…");
-  const result = await loader.apply({ video: { file: vf }, analysis: { file: af }, label: vf.name });
-  finishApply(result, offset, false);
+async function loadUserVideo(file) {
+  setSourceMsg("불러오는 중…", file.name);
+  const result = await loader.apply({ video: { file }, analysis: null, label: file.name });
+  finishApply(result);
 }
 
-function finishApply(result, offset, isSample) {
+function finishApply(result) {
   if (result.status === "superseded") return;
   if (result.status === "failed") {
-    const msg = result.error && result.error.message ? result.error.message : String(result.error);
-    setFileMsg(`적용하지 못했습니다: ${msg} 현재 표시 중인 데이터는 그대로입니다.`, true);
+    setSourceMsg("이 영상을 열 수 없습니다. 현재 화면은 그대로입니다.", "", true);
+    el.demo.hidden = !(loader.active && loader.active.owned);
     return;
   }
-  activate(result.pair, offset, isSample);
+  activate(result.pair);
 }
 
-function activate(pair, offset, isSample) {
+function activate(pair) {
   const v = el.video;
   clock.stop();
   v.pause();
-  state.model = pair.model;
+  state.model = pair.model; // null for a user video: no bundled analysis is reused
   state.meta = pair.meta;
-  state.offset = offset;
   state.videoError = null;
-  state.index = -1;
-  state.renderedFlight = null;
   v.src = pair.videoURL;
   v.load();
-  v.playbackRate = Number(el.speed.value);
-  el.inOffset.value = String(offset);
-
-  const warnings = [];
-  const oob = outOfBoundsCount(pair.model, pair.meta.width, pair.meta.height);
-  if (oob > 0) warnings.push(`영상 크기(${pair.meta.width}×${pair.meta.height}) 밖의 점 ${oob}개는 그리지 않습니다.`);
-  const mm = durationMismatch(pair.model, pair.meta.duration, offset);
-  if (mm) warnings.push(mm);
-  if (!isSample && pair.label && pair.model.sourceVideo && pair.model.sourceVideo !== pair.label) {
-    warnings.push(`분석의 source_video(${pair.model.sourceVideo})와 선택한 영상 이름(${pair.label})이 다릅니다.`);
-  }
-  state.warning = warnings.join(" ") || null;
-
-  const synthetic = pair.model.synthetic;
-  el.badge.textContent = isSample ? "합성 샘플" : synthetic ? "로컬 파일 · 합성 데이터" : "로컬 파일";
-  el.badge.classList.toggle("local", !isSample);
-  setFileMsg(isSample ? "합성 샘플을 표시 중입니다." : `적용됨: ${pair.label}`);
-  if (state.warning) setFileMsg(`${el.fileMsg.textContent} ${state.warning}`);
-
-  const m = pair.model;
-  el.range.min = String(m.pts[0]);
-  el.range.max = String(m.pts[m.pts.length - 1]);
-  el.range.value = String(m.pts[0]);
-  buildFlightList(m);
+  setChosen(true);
+  el.demo.hidden = !pair.owned;
+  if (pair.owned) setSourceMsg(NO_ANALYSIS, pair.label);
+  else setSourceMsg("");
+  showCourtCue(pair.model);
+  setRange();
   layoutCanvases();
-  drawStrip();
-  render(toAnalysisTime(0, offset));
+  render(toAnalysisTime(0, OFFSET));
+}
+
+/** Empty first screen (chooser) until a source is committed; header actions and transport after. */
+function setChosen(on) {
+  el.chooser.hidden = on;
+  el.sourceActions.hidden = !on;
+  el.play.disabled = el.range.disabled = !on;
+}
+
+/** Back to the empty first screen (bfcache restore after dispose): nothing is loaded. */
+function showEmpty() {
+  clock.stop();
+  state.model = state.meta = state.videoError = null;
+  el.video.removeAttribute("src");
+  el.video.load();
+  el.courtCue.replaceChildren();
+  setSourceMsg("");
+  setChosen(false);
+  layoutCanvases();
+  render(0);
+}
+
+/** Compact cue only: the ≈ estimate when present, or a truthful empty state. */
+function showCourtCue(m) {
+  el.courtCue.replaceChildren();
+  el.courtCue.dataset.kind = m ? "analysis" : "none";
+  if (!m) {
+    el.courtCue.textContent = "분석 결과 없음";
+  } else if (m.hasShuttleMapRef) {
+    const key = document.createElement("span");
+    key.className = "key key-shuttle-map";
+    key.setAttribute("aria-hidden", "true");
+    el.courtCue.append(key, "셔틀 위치 ≈ 추정");
+  }
+}
+
+function setRange() {
+  const m = state.model;
+  if (m) {
+    el.range.min = String(m.pts[0]);
+    el.range.max = String(m.pts[m.pts.length - 1]);
+  } else {
+    const d = Number.isFinite(el.video.duration) ? el.video.duration : state.meta && state.meta.duration;
+    el.range.min = "0";
+    el.range.max = String(Number.isFinite(d) && d > 0 ? d : 1);
+  }
 }
 
 // ---------- time / rendering ----------
 
 function currentAnalysisTime(videoTime = el.video.currentTime) {
-  return toAnalysisTime(videoTime, state.offset);
+  return toAnalysisTime(videoTime, OFFSET);
 }
 
 function render(analysisTime) {
   const m = state.model;
-  if (!m) return;
-  const res = state.videoError ? { index: -1, status: "after" } : lookupFrame(m, analysisTime);
-  state.index = res.index;
-  state.lookup = res.status;
-  const fr = res.index >= 0 ? m.frames[res.index] : null;
+  let fr = null;
+  let status = "before";
+  if (m && !state.videoError) {
+    const res = lookupFrame(m, analysisTime);
+    status = res.status;
+    fr = res.index >= 0 ? m.frames[res.index] : null;
+  }
   drawOverlay(fr);
   drawCourt(fr);
-  updateReadout(analysisTime, fr, res.status);
+  updateVideoMsg(m, fr, status);
   if (document.activeElement !== el.range) el.range.value = String(analysisTime);
-  drawStripCursor(analysisTime);
 }
 
-function updateReadout(t, fr, status) {
-  const m = state.model;
-  el.roTime.textContent = `${t.toFixed(3)} s`;
-  if (!fr) {
-    el.roFrame.textContent = el.roSeg.textContent = el.roFlight.textContent = el.roZ.textContent = "–";
-  } else {
-    el.roFrame.textContent = `#${fr.frameId} (${fr.index + 1}/${m.frames.length}) · pts ${fr.pts.toFixed(4)}`;
-    el.roSeg.textContent = fr.segmentKey === null ? "없음 (컷)" : segLabel(m, fr.segmentKey);
-    const fi = m.flightOfFrame[fr.index];
-    el.roFlight.textContent = fi >= 0 ? m.flights[fi].id : "–";
-    el.roZ.textContent = fr.modelXyz ? `≈ ${fr.modelXyz[2].toFixed(2)} m` : "–";
-  }
-  let st;
-  if (state.videoError) st = { kind: "error", label: state.videoError };
-  else st = frameState(m, fr ? fr.index : -1, status);
-  el.roState.textContent = st.label;
-  el.roState.dataset.kind = st.kind;
-  el.videoMsg.hidden = !(st.kind === "cut" || st.kind === "outside" || st.kind === "error");
-  el.videoMsg.textContent = st.label;
-  highlightFlight(fr ? m.flightOfFrame[fr.index] : -1);
-}
-
-function segLabel(m, key) {
-  const s = m.segments.get(key);
-  return s ? String(s.id) : "?";
+/** Only a short message over the video: playback error or a camera cut. */
+function updateVideoMsg(m, fr, status) {
+  let msg = "";
+  if (state.videoError) msg = state.videoError;
+  else if (m && fr && frameState(m, fr.index, status).kind === "cut") msg = "카메라 컷";
+  el.videoMsg.hidden = !msg;
+  el.videoMsg.textContent = plainCopy(msg);
 }
 
 function fitCanvas(cv) {
@@ -233,7 +211,6 @@ function fitCanvas(cv) {
 function layoutCanvases() {
   fitCanvas(el.overlay);
   fitCanvas(el.court);
-  fitCanvas(el.strip);
 }
 
 function drawDot(ctx, x, y, r, fill, stroke) {
@@ -279,14 +256,15 @@ function drawOverlay(fr) {
   const { width: vw, height: vh } = state.meta;
   // Same contain rect as the <video> (object-fit: contain) for rings, dots and trails.
   const t = containTransform(vw, vh, cv.width, cv.height);
+  drawPlayersOnVideo(ctx, fr, t, vw, vh, dpr, cv);
   const r = 4 * dpr;
   const layers = [
-    ["model", el.tgModel.checked, (f) => f.modelPx, COLORS.model, "#4a2300"],
-    ["observed", el.tgObserved.checked, (f) => f.observed, COLORS.observed, "#0b3d1c"],
+    ["model", true, (f) => f.modelPx, COLORS.model, "#4a2300"],
+    ["observed", true, (f) => f.observed, COLORS.observed, "#0b3d1c"],
   ];
   for (const [kind, on, get, color, stroke] of layers) {
     if (!on) continue;
-    if (el.tgTrail.checked) {
+    {
       // Split at any out-of-image point so no segment is drawn through it.
       const pts = trailIndices(m, fr.index, kind, 15).map((i) => get(m.frames[i]));
       for (const run of mapTrailRuns(pts, t, vw, vh)) drawPolyline(ctx, run, color, 2 * dpr);
@@ -299,9 +277,49 @@ function drawOverlay(fr) {
   }
 }
 
+// Player boxes, ankle markers and N1/N2/F1/F2 badges through the same contain transform.
+function drawPlayersOnVideo(ctx, fr, t, vw, vh, dpr, cv) {
+  const rect = { x: t.ox, y: t.oy, w: t.width, h: t.height };
+  ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
+  ctx.textBaseline = "top";
+  for (const p of fr.players) {
+    const color = PLAYER_COLORS[p.id];
+    const x1 = Math.max(0, Math.min(vw, p.box[0]));
+    const y1 = Math.max(0, Math.min(vh, p.box[1]));
+    const x2 = Math.max(0, Math.min(vw, p.box[2]));
+    const y2 = Math.max(0, Math.min(vh, p.box[3]));
+    if (x2 <= x1 || y2 <= y1) continue; // box entirely outside the image: not drawn
+    const [ax, ay] = t.map([x1, y1]);
+    const [bx, by] = t.map([x2, y2]);
+    ctx.lineWidth = 3 * dpr;
+    ctx.strokeStyle = "rgba(0,0,0,0.55)";
+    ctx.strokeRect(ax, ay, bx - ax, by - ay);
+    ctx.lineWidth = 1.5 * dpr;
+    ctx.strokeStyle = color;
+    ctx.strokeRect(ax, ay, bx - ax, by - ay);
+    if (p.keypoints) {
+      for (const k of ANKLES) {
+        const q = p.keypoints[k];
+        if (q[2] < 0.3 || !inImage(q, vw, vh)) continue;
+        const [qx, qy] = t.map(q);
+        drawDot(ctx, qx, qy, 3 * dpr, color, "#10161a");
+      }
+    }
+    const lw = ctx.measureText(p.short).width + 8 * dpr;
+    const lh = 15 * dpr;
+    const pos = fitLabel(ax, ay, lw, lh, rect, cv.width, cv.height);
+    ctx.fillStyle = color;
+    ctx.fillRect(pos.x, pos.y, lw, lh);
+    ctx.fillStyle = "#10161a";
+    ctx.fillText(p.short, pos.x + 4 * dpr, pos.y + 2 * dpr);
+  }
+  ctx.textBaseline = "alphabetic";
+}
+
+const COURT_MARGIN = { mx: 0.6, my: 0.9 };
+
 function courtTransform(cv) {
-  const mx = 0.6;
-  const my = 0.9;
+  const { mx, my } = COURT_MARGIN;
   const s = Math.min(cv.width / (COURT.width_m + 2 * mx), cv.height / (COURT.length_m + 2 * my));
   const ox = (cv.width - COURT.width_m * s) / 2;
   const oy = (cv.height - COURT.length_m * s) / 2;
@@ -345,142 +363,165 @@ function drawCourt(fr) {
   ctx.fillText("카메라 쪽", 4 * dpr, cv.height - 5 * dpr);
 
   const m = state.model;
-  if (!fr || !m || !el.tgModel.checked || fr.modelXyz === null || fr.modelFlightId === null) return;
-  if (el.tgTrail.checked) {
-    const pts = trailIndices(m, fr.index, "model", 40).map((i) => map(m.frames[i].modelXyz[0], m.frames[i].modelXyz[1]));
-    drawPolyline(ctx, pts, COLORS.model, 2 * dpr);
+  // Players never depend on the shuttle model.
+  drawPlayersOnCourt(ctx, fr, map, dpr);
+  if (fr && m && fr.modelXyz !== null && fr.modelFlightId !== null) {
+    {
+      const pts = trailIndices(m, fr.index, "model", 40).map((i) => map(m.frames[i].modelXyz[0], m.frames[i].modelXyz[1]));
+      drawPolyline(ctx, pts, COLORS.model, 2 * dpr);
+    }
+    const [x, y] = map(fr.modelXyz[0], fr.modelXyz[1]);
+    drawDot(ctx, x, y, 5 * dpr, COLORS.model, "#4a2300");
+    ctx.fillStyle = "#fff";
+    ctx.fillText(`모델 z≈${fr.modelXyz[2].toFixed(2)} m (추정)`, Math.min(x + 8 * dpr, cv.width - 130 * dpr), y - 8 * dpr);
   }
-  const [x, y] = map(fr.modelXyz[0], fr.modelXyz[1]);
-  drawDot(ctx, x, y, 5 * dpr, COLORS.model, "#4a2300");
-  ctx.fillStyle = "#fff";
-  ctx.fillText(`모델 z≈${fr.modelXyz[2].toFixed(2)} m (추정)`, Math.min(x + 8 * dpr, cv.width - 130 * dpr), y - 8 * dpr);
+  // Drawn last so the estimate stays visible over players.
+  if (fr && m && fr.segmentKey !== null && fr.shuttleMapRef) drawShuttleMapRef(ctx, cv, fr, map, dpr);
 }
 
-function drawStrip() {
-  const cv = el.strip;
-  fitCanvas(cv);
-  const ctx = cv.getContext("2d");
-  const m = state.model;
-  ctx.fillStyle = "#cfc7b6";
-  ctx.fillRect(0, 0, cv.width, cv.height);
-  if (!m) return;
-  const t0 = m.pts[0];
-  const span = Math.max(1e-6, m.pts[m.pts.length - 1] - t0);
-  const X = (t) => ((t - t0) / span) * cv.width;
-  for (const sgm of m.segments.values()) {
-    ctx.fillStyle = "#2d5a45";
-    ctx.fillRect(X(sgm.startS), 0, Math.max(1, X(sgm.endS) - X(sgm.startS)), cv.height);
-  }
-  for (const f of m.flights) {
-    ctx.fillStyle = f.accepted ? COLORS.model : "#8a8579";
-    ctx.fillRect(X(f.t0) - 1, 0, 2, cv.height);
-  }
-  stripBase = ctx.getImageData(0, 0, cv.width, cv.height);
-}
-let stripBase = null;
-
-function drawStripCursor(t) {
-  const cv = el.strip;
-  const m = state.model;
-  if (!m || !stripBase || stripBase.width !== cv.width) return drawStrip();
-  const ctx = cv.getContext("2d");
-  ctx.putImageData(stripBase, 0, 0);
-  const span = Math.max(1e-6, m.pts[m.pts.length - 1] - m.pts[0]);
-  const x = ((t - m.pts[0]) / span) * cv.width;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(Math.round(x) - 1, 0, 3, cv.height);
-}
-
-// ---------- flight list ----------
-
-const END_LABEL = {
-  intercepted_by_next_contact: "다음 접촉에서 끝남",
-  landing_region: "검토된 착지 영역",
-  open_segment_end: "세그먼트 끝까지 (열림)",
-};
-const STATUS_LABEL = {
-  accepted: "채택",
-  rejected_by_gates_or_fit: "기각 — 물리 게이트/적합 실패",
-  insufficient_observations: "기각 — 관측 부족",
+const MAP_BOX = {
+  x0: -COURT_MARGIN.mx, y0: -COURT_MARGIN.my, x1: COURT.width_m + COURT_MARGIN.mx, y1: COURT.length_m + COURT_MARGIN.my,
 };
 
-function buildFlightList(m) {
-  el.flightList.replaceChildren();
-  el.flightEmpty.hidden = m.flights.length > 0;
-  const sorted = m.flights.map((f, i) => [f, i]).sort((a, b) => a[0].t0 - b[0].t0);
-  for (const [f, i] of sorted) {
-    const li = document.createElement("li");
-    const b = document.createElement("button");
-    b.type = "button";
-    b.dataset.flight = String(i);
-    if (!f.accepted) b.classList.add("rejected");
-    const title = document.createElement("span");
-    title.className = "f-title";
-    title.textContent = `${f.id} · ${STATUS_LABEL[f.status] || (f.accepted ? "채택" : `기각 (${f.status})`)}`;
-    const meta = document.createElement("span");
-    meta.className = "f-meta";
-    const parts = [
-      `세그먼트 ${segLabel(m, f.segmentKey)}`,
-      `t0 ${f.t0.toFixed(3)} s (사람 검토)`,
-      END_LABEL[f.endType] || f.endType,
-    ];
-    if (f.accepted && f.speedCoarseKmH !== null) parts.push(`모델 초기 속도 ≈${f.speedCoarseKmH} km/h (추정)`);
-    if (!f.accepted) parts.push("모델 미표시");
-    meta.textContent = parts.join(" · ");
-    b.append(title, meta);
-    b.addEventListener("click", () => {
-      el.video.pause();
-      const idx = firstFrameAtOrAfter(m, f.t0);
-      if (idx < 0) return;
-      seekAnalysis(seekTimeForIndex(m, idx), `${f.id}: t0 이후 첫 프레임으로 이동`);
-    });
-    li.append(b);
-    el.flightList.append(li);
-  }
+function strokeDiamond(ctx, x, y, r, dashed, dpr) {
+  ctx.beginPath();
+  ctx.moveTo(x, y - r);
+  ctx.lineTo(x + r, y);
+  ctx.lineTo(x, y + r);
+  ctx.lineTo(x - r, y);
+  ctx.closePath();
+  ctx.setLineDash([]);
+  ctx.lineWidth = 4.5 * dpr;
+  ctx.strokeStyle = "rgba(16,22,26,0.85)";
+  ctx.stroke();
+  ctx.setLineDash(dashed ? [3 * dpr, 2.5 * dpr] : []);
+  ctx.lineWidth = 2.5 * dpr;
+  ctx.strokeStyle = SHUTTLE_MAP_COLOR;
+  ctx.stroke();
+  ctx.setLineDash([]);
 }
 
-function highlightFlight(fi) {
-  if (state.renderedFlight === fi) return;
-  state.renderedFlight = fi;
-  for (const b of el.flightList.querySelectorAll("button")) {
-    if (Number(b.dataset.flight) === fi) b.setAttribute("aria-current", "true");
-    else b.removeAttribute("aria-current");
+function drawMapLabel(ctx, cv, text, x, y, r, dpr) {
+  ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
+  ctx.textBaseline = "top";
+  const w = ctx.measureText(text).width + 8 * dpr;
+  const h = 15 * dpr;
+  const pos = shuttleLabelBox(x, y, w, h, r, cv.width, cv.height, 2 * dpr);
+  ctx.fillStyle = "rgba(16,22,26,0.85)";
+  ctx.fillRect(pos.x, pos.y, w, h);
+  ctx.fillStyle = SHUTTLE_MAP_COLOR;
+  ctx.fillText(text, pos.x + 4 * dpr, pos.y + 2 * dpr);
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+}
+
+// File-supplied conditional estimate only: hollow diamond, dashed when interpolated or held.
+function drawShuttleMapRef(ctx, cv, fr, map, dpr) {
+  const m = state.model;
+  const ref = fr.shuttleMapRef;
+  const arrow = shuttleEdgeArrow(ref.xy, MAP_BOX);
+  {
+    const pts = shuttleRefTrail(m, fr.index, 40);
+    ctx.lineCap = ctx.lineJoin = "round";
+    for (let k = 1; k < pts.length; k++) {
+      const a = pts[k - 1];
+      const b = pts[k];
+      if (shuttleEdgeArrow(a.xy, MAP_BOX) || shuttleEdgeArrow(b.xy, MAP_BOX)) continue; // never drawn off the box
+      const p = map(a.xy[0], a.xy[1]);
+      const q = map(b.xy[0], b.xy[1]);
+      ctx.setLineDash(a.dashed || b.dashed ? [4 * dpr, 3 * dpr] : []);
+      ctx.beginPath();
+      ctx.moveTo(p[0], p[1]);
+      ctx.lineTo(q[0], q[1]);
+      ctx.strokeStyle = SHUTTLE_MAP_COLOR;
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
   }
+  const r = 9 * dpr; // visibly larger than player dots (6 * dpr)
+  if (arrow) {
+    // Direction only, at the drawable edge; the value itself is not placed on the court.
+    const [ex, ey] = map(arrow.x, arrow.y);
+    const s = 9 * dpr;
+    const cx = ex - Math.cos(arrow.angle) * s;
+    const cy = ey - Math.sin(arrow.angle) * s;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(arrow.angle);
+    ctx.beginPath();
+    ctx.moveTo(s, 0);
+    ctx.lineTo(-s * 0.6, -s * 0.7);
+    ctx.lineTo(-s * 0.6, s * 0.7);
+    ctx.closePath();
+    ctx.lineWidth = 4 * dpr;
+    ctx.strokeStyle = "rgba(16,22,26,0.85)";
+    ctx.stroke();
+    ctx.setLineDash(ref.status === "estimated" ? [] : [3 * dpr, 2.5 * dpr]);
+    ctx.lineWidth = 2 * dpr;
+    ctx.strokeStyle = SHUTTLE_MAP_COLOR;
+    ctx.stroke();
+    ctx.restore();
+    drawMapLabel(ctx, cv, shuttleRefLabel(ref, fr.pts, true), cx, cy, s, dpr);
+    return;
+  }
+  const [x, y] = map(ref.xy[0], ref.xy[1]);
+  strokeDiamond(ctx, x, y, r, ref.status !== "estimated", dpr);
+  drawMapLabel(ctx, cv, shuttleRefLabel(ref, fr.pts), x, y, r, dpr);
+}
+
+// Manual-reference floor positions (≈) only where the file supplies court_xy_m.
+function drawPlayersOnCourt(ctx, fr, map, dpr) {
+  const m = state.model;
+  if (fr && m && fr.segmentKey !== null) {
+    for (const p of fr.players) {
+      if (p.courtXy === null) continue;
+      if (!courtMarkerVisible(p.courtXy, COURT_MARGIN.mx, COURT_MARGIN.my, COURT.width_m, COURT.length_m)) {
+        continue;
+      }
+      const color = PLAYER_COLORS[p.id];
+      {
+        // Split where a trail point leaves the drawable margin; never clipped into the court.
+        let run = [];
+        for (const i of playerTrail(m, fr.index, p.id, 40)) {
+          const q = m.frames[i].players.find((x) => x.id === p.id).courtXy;
+          if (courtMarkerVisible(q, COURT_MARGIN.mx, COURT_MARGIN.my, COURT.width_m, COURT.length_m)) run.push(map(q[0], q[1]));
+          else {
+            drawPolyline(ctx, run, color, 1.5 * dpr);
+            run = [];
+          }
+        }
+        drawPolyline(ctx, run, color, 1.5 * dpr);
+      }
+      const [x, y] = map(p.courtXy[0], p.courtXy[1]);
+      drawDot(ctx, x, y, 6 * dpr, color, "#10161a");
+      ctx.fillStyle = "#10161a";
+      ctx.font = `700 ${8 * dpr}px system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(p.short, x, y);
+      ctx.textAlign = "start";
+      ctx.textBaseline = "alphabetic";
+    }
+  }
+  ctx.font = `${11 * dpr}px system-ui, sans-serif`;
 }
 
 // ---------- controls ----------
 
-function seekAnalysis(t, note) {
-  const m = state.model;
-  if (!m) return;
-  const vt = toVideoTime(t, state.offset);
+function seekTo(t) {
+  if (!state.meta) return;
   const dur = el.video.duration;
-  if (vt < 0 || (Number.isFinite(dur) && vt > dur)) {
-    el.roState.textContent = "이 시각은 영상 범위 밖입니다 (오프셋 확인).";
-    el.roState.dataset.kind = "outside";
-    return;
-  }
-  el.video.currentTime = vt;
-  render(t);
-  if (note) el.roState.textContent = `${note} — ${el.roState.textContent}`;
-}
-
-function step(delta) {
-  const m = state.model;
-  if (!m) return;
-  el.video.pause();
-  const base = state.index >= 0 ? state.index : lookupFrame(m, currentAnalysisTime()).index;
-  let idx;
-  if (base < 0) idx = state.lookup === "after" ? m.frames.length - 1 : 0;
-  else idx = stepIndex(m, base, delta);
-  seekAnalysis(seekTimeForIndex(m, idx));
+  const vt = Math.max(0, toVideoTime(t, OFFSET));
+  el.video.currentTime = Number.isFinite(dur) ? Math.min(vt, dur) : vt;
+  render(currentAnalysisTime(el.video.currentTime));
 }
 
 const clock = new FrameClock(el.video, (mediaTime) => render(currentAnalysisTime(mediaTime)));
 
 el.play.addEventListener("click", () => {
-  if (!state.model) return;
-  if (el.video.paused || el.video.ended) el.video.play().catch((e) => setFileMsg(`재생 실패: ${e.message}`, true));
+  if (!state.meta) return;
+  if (el.video.paused || el.video.ended) el.video.play().catch(() => {});
   else el.video.pause();
 });
 el.video.addEventListener("play", () => {
@@ -496,55 +537,41 @@ for (const ev of ["pause", "ended"]) {
 }
 el.video.addEventListener("seeked", () => render(currentAnalysisTime()));
 el.video.addEventListener("loadeddata", () => render(currentAnalysisTime()));
+// Keep the contain transform on the element's own decoded size.
+el.video.addEventListener("loadedmetadata", () => {
+  const v = el.video;
+  if (!state.meta || !v.videoWidth || !v.videoHeight) return;
+  state.meta = { ...state.meta, width: v.videoWidth, height: v.videoHeight, duration: v.duration };
+  setRange();
+  layoutCanvases();
+  render(currentAnalysisTime());
+});
 el.video.addEventListener("error", () => {
-  if (!el.video.getAttribute("src")) return;
+  const active = loader.active;
+  // Ignore errors from a source that is no longer the active one.
+  if (!el.video.getAttribute("src") || !active || el.video.src !== new URL(active.videoURL, document.baseURI).href) return;
   clock.stop();
-  state.videoError = "영상을 재생할 수 없습니다. 오버레이를 숨겼습니다. ‘샘플로 복구’를 누르거나 다른 파일을 고르세요.";
+  state.videoError = "영상을 재생할 수 없습니다.";
+  setSourceMsg("영상을 재생할 수 없습니다. 다른 영상을 고르세요.", "", true);
   render(currentAnalysisTime());
 });
-el.prev.addEventListener("click", () => step(-1));
-el.next.addEventListener("click", () => step(1));
-el.speed.addEventListener("change", () => {
-  el.video.playbackRate = Number(el.speed.value);
-});
-el.sound.addEventListener("click", () => {
-  el.video.muted = !el.video.muted;
-  el.sound.setAttribute("aria-pressed", String(!el.video.muted));
-  el.sound.textContent = el.video.muted ? "소리 꺼짐" : "소리 켜짐 (테스트 톤)";
-});
-el.range.addEventListener("input", () => seekAnalysis(Number(el.range.value)));
-for (const t of [el.tgObserved, el.tgModel, el.tgTrail]) {
-  t.addEventListener("change", () => render(currentAnalysisTime()));
+el.range.addEventListener("input", () => seekTo(Number(el.range.value)));
+
+for (const input of [el.inVideo, el.inVideoFirst]) {
+  input.addEventListener("change", () => {
+    const file = input.files && input.files[0];
+    input.value = ""; // the same file can be picked again
+    if (!file) return; // picker cancelled: keep what is shown
+    loadUserVideo(file);
+  });
 }
-const updateApply = () => {
-  el.apply.disabled = !(el.inVideo.files && el.inVideo.files.length && el.inAnalysis.files && el.inAnalysis.files.length);
-  if (!el.apply.disabled) setFileMsg("두 파일을 골랐습니다. ‘이 쌍 적용’을 누르면 검사 후 바꿉니다.");
-};
-el.inVideo.addEventListener("change", updateApply);
-el.inAnalysis.addEventListener("change", updateApply);
-el.apply.addEventListener("click", applyLocal);
-el.sample.addEventListener("click", () => {
-  el.inVideo.value = el.inAnalysis.value = "";
-  el.apply.disabled = true;
-  loadSample();
-});
-el.inOffset.addEventListener("change", () => {
-  const v = Number(el.inOffset.value);
-  if (!state.model || !Number.isFinite(v) || Math.abs(v) > 86400) return;
-  state.offset = v;
-  render(currentAnalysisTime());
-});
+el.demo.addEventListener("click", () => loadSample());
+el.sample.addEventListener("click", () => loadSample());
 
 document.addEventListener("keydown", (e) => {
   const tag = e.target && e.target.tagName;
-  if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || e.altKey || e.ctrlKey || e.metaKey) return;
-  if (e.key === "ArrowLeft") {
-    e.preventDefault();
-    step(-1);
-  } else if (e.key === "ArrowRight") {
-    e.preventDefault();
-    step(1);
-  } else if (e.key === " " && tag !== "BUTTON") {
+  if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || tag === "BUTTON" || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.key === " ") {
     e.preventDefault();
     el.play.click();
   }
@@ -555,7 +582,6 @@ window.addEventListener("resize", () => {
   cancelAnimationFrame(resizeRaf);
   resizeRaf = requestAnimationFrame(() => {
     layoutCanvases();
-    drawStrip();
     render(currentAnalysisTime());
   });
 });
@@ -564,9 +590,8 @@ window.addEventListener("pagehide", () => {
   loader.dispose();
 });
 window.addEventListener("pageshow", (e) => {
-  if (e.persisted && !loader.active) loadSample(); // restored from bfcache after dispose
+  if (e.persisted && !loader.active) showEmpty(); // restored from bfcache after dispose
 });
 
 el.video.muted = true;
-drawStrip();
-loadSample();
+showEmpty(); // nothing is fetched or attached until the viewer chooses a source

@@ -20,7 +20,7 @@ export class PairLoader {
   /**
    * Stage and, if still current, commit a pair. `video` is either
    * { file } (an ObjectURL is created and owned) or { url } (not owned).
-   * Analysis is { file } or { text }.
+   * Analysis is { file }, { text } or null (a video with no analysis; model is null).
    * Resolves { status: "committed" | "superseded" | "failed", error?, pair? }.
    */
   async apply({ video, analysis, label }) {
@@ -32,9 +32,12 @@ export class PairLoader {
       url = null;
     };
     try {
-      const text = analysis.file ? await this.deps.readText(analysis.file) : analysis.text;
-      if (gen !== this.generation) return discard(), { status: "superseded" };
-      const model = this.deps.parse(text);
+      let model = null;
+      if (analysis) {
+        const text = analysis.file ? await this.deps.readText(analysis.file) : analysis.text;
+        if (gen !== this.generation) return discard(), { status: "superseded" };
+        model = this.deps.parse(text);
+      }
       url = owned ? this.deps.createURL(video.file) : video.url;
       const meta = await this.deps.probeVideo(url);
       if (gen !== this.generation) return discard(), { status: "superseded" };
@@ -48,6 +51,11 @@ export class PairLoader {
       if (gen !== this.generation) return { status: "superseded" };
       return { status: "failed", error };
     }
+  }
+
+  /** Supersede any in-flight request; the active pair is kept. Returns the new generation. */
+  cancel() {
+    return ++this.generation;
   }
 
   /** Release everything (page unload). */

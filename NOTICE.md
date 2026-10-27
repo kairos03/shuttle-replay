@@ -42,6 +42,23 @@ detections this tool consumes.
 If you run those tools yourself, their licenses apply to that use and to their
 outputs as stated by their authors.
 
+## Real-video browser demo
+
+`web/demo/assets/real/source_clip.mp4` is a 7.007-second excerpt (210 frames,
+1080x1920, no audio) of Pexels video 35427619, “Intense Indoor Badminton Match
+in Action”:
+https://www.pexels.com/video/intense-indoor-badminton-match-in-action-35427619/
+
+The footage is used under the Pexels License, not AGPL:
+https://www.pexels.com/license/ . The source page and license were checked for
+this publication. Pexels permits free use and modification; its restrictions
+continue to apply. No endorsement by Pexels or the depicted people is implied.
+This project is an analytical replay demo, not a stock-footage distribution service.
+
+The accompanying analysis is precomputed experimental output. Neither the
+manual player calibration nor the conditional shuttle map is independently
+verified ground truth. No model code or weights are bundled.
+
 ## Court geometry
 
 Court dimensions follow the BWF Laws of Badminton (outer boundary 6.10 m x 13.40 m,

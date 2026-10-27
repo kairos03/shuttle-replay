@@ -21,7 +21,7 @@ const opt = (name, dflt) => {
 const OUT = opt("--out", process.env.SMOKE_OUT || "smoke-out");
 const CHANNEL = opt("--channel", undefined);
 const WEB = fileURLToPath(new URL("..", import.meta.url));
-const SAMPLE = join(WEB, "demo", "assets", "sample");
+const REAL = join(WEB, "demo", "assets", "real");
 
 async function loadPlaywright() {
   const candidates = [process.env.PLAYWRIGHT_CORE, "playwright-core", "playwright"].filter(Boolean);
@@ -75,99 +75,87 @@ try {
       r.value = String(v);
       r.dispatchEvent(new Event("input"));
     }, t);
-  const overlayColors = () =>
+  const overlayInk = () =>
     page.evaluate(() => {
       const c = document.getElementById("cv-overlay");
       const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
-      let green = 0, orange = 0;
-      for (let i = 0; i < d.length; i += 4) {
-        if (d[i + 3] < 200) continue;
-        if (d[i + 1] > 180 && d[i] < 120) green++;
-        if (d[i] > 220 && d[i + 1] > 100 && d[i + 1] < 170 && d[i + 2] < 80) orange++;
-      }
-      return { green, orange };
+      let n = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++;
+      return n;
     });
+  const demoHidden = () => page.evaluate(() => document.getElementById("btn-demo").hidden);
+  const clip = { name: "my <b>clip</b>.mp4", mimeType: "video/mp4", buffer: readFileSync(join(REAL, "source_clip.mp4")) };
 
-  await check("sample loads with 5 flights and badge", async () => {
-    await page.waitForFunction(() => document.querySelectorAll("#flight-list li").length === 5, null, { timeout: 8000 });
-    assert.equal((await text("#data-badge")).trim(), "합성 샘플");
-    await waitText("#ro-frame", /#0 /);
+  await check("first visit is empty: no JSON/media request, chooser shown, transport disabled", async () => {
+    await page.waitForTimeout(500);
+    const res = await page.evaluate(() => performance.getEntriesByType("resource").map((r) => r.name));
+    assert.deepEqual(res.filter((u) => /\.(json|mp4|webm|mov)(\?|$)/.test(u)), []);
+    assert.equal(await page.evaluate(() => document.getElementById("video").getAttribute("src")), null);
+    assert.equal(await page.isVisible("#chooser"), true);
+    assert.equal(await page.isVisible("#source-actions"), false);
+    assert.equal(await page.isDisabled("#btn-play"), true);
+    assert.equal(await page.isDisabled("#rng-time"), true);
+    await page.keyboard.press("Space");
+    assert.equal(await page.evaluate(() => document.getElementById("video").getAttribute("src")), null);
   });
-  const media = await page.evaluate(() => document.getElementById("video").currentSrc);
-  results.push(["INFO", `sample media: ${media.split("/").pop()}`]);
-  if (ROOT !== WEB) {
-    await check("docs link resolves in built site", async () => {
-      const href = await page.getAttribute(".links a", "href");
-      const res = await page.request.get(new URL(href, base).href);
-      assert.equal(res.status(), 200);
-    });
-  }
-  await check("frame stepping follows analysis frames", async () => {
-    for (let i = 0; i < 3; i++) {
-      await page.click("#btn-next");
-      await waitText("#ro-frame", new RegExp(`#${i + 1} `));
-    }
-    await page.keyboard.press("ArrowLeft");
-    await waitText("#ro-frame", /#2 /);
+  await check("cancelled first pick keeps the empty chooser", async () => {
+    await page.setInputFiles("#in-video-first", []);
+    await page.waitForTimeout(150);
+    assert.equal(await page.isVisible("#chooser"), true);
   });
-  await check("flight list jumps to t0 and highlights flight", async () => {
-    await page.click('#flight-list button[data-flight="3"]');
-    await waitText("#ro-flight", /flight_c4/);
-    assert.equal(await page.getAttribute('#flight-list button[data-flight="3"]', "aria-current"), "true");
+  await check("undecodable first pick keeps the chooser with a short error", async () => {
+    await page.setInputFiles("#in-video-first", { name: "bad.mp4", mimeType: "video/mp4", buffer: Buffer.from("not a video") });
+    await waitText("#source-state", /열 수 없습니다/);
+    assert.equal(await page.isVisible("#chooser"), true);
+    assert.equal(await page.evaluate(() => document.getElementById("video").getAttribute("src")), null);
   });
-  await check("camera cut shows no overlay", async () => {
-    await seekRange(2.7);
-    await waitText("#ro-state", /카메라 컷/);
-    const c = await overlayColors();
-    assert.equal(c.green + c.orange, 0);
-  });
-  await check("observed + model drawn and independently toggleable", async () => {
-    await seekRange(3.3339);
-    await waitText("#ro-frame", /#100 /);
-    let c = await overlayColors();
-    assert.ok(c.green > 0 && c.orange > 0, JSON.stringify(c));
-    await page.uncheck("#tg-model");
-    c = await overlayColors();
-    assert.ok(c.green > 0 && c.orange === 0, JSON.stringify(c));
-    await page.check("#tg-model");
-    await page.uncheck("#tg-observed");
-    c = await overlayColors();
-    assert.ok(c.green === 0 && c.orange > 0, JSON.stringify(c));
-    await page.check("#tg-observed");
-  });
-  await page.screenshot({ path: join(OUT, "desktop-1280.png"), fullPage: true });
-
-  const mp4 = readFileSync(join(SAMPLE, "synthetic_rally.mp4"));
-  const webm = readFileSync(join(SAMPLE, "synthetic_rally.webm"));
-  const okVideo = media.endsWith(".mp4")
-    ? { name: "synthetic_rally.mp4", mimeType: "video/mp4", buffer: mp4 }
-    : { name: "synthetic_rally.webm", mimeType: "video/webm", buffer: webm };
-  const analysis = readFileSync(join(SAMPLE, "analysis.json"));
-  const pick = async (video, json) => {
-    await page.setInputFiles("#in-video", video);
-    await page.setInputFiles("#in-analysis", { name: "analysis.json", mimeType: "application/json", buffer: Buffer.from(json) });
-    await page.click("#btn-apply");
-  };
-  await check("invalid JSON is rejected, sample stays active", async () => {
-    await pick(okVideo, "{broken");
-    await waitText("#file-msg", /적용하지 못했습니다.*JSON/);
-    assert.equal((await text("#data-badge")).trim(), "합성 샘플");
-    assert.equal(await page.locator("#flight-list li").count(), 5);
-  });
-  await check("unknown schema rejected in Korean", async () => {
-    await pick(okVideo, JSON.stringify({ schema: "other/v9", frames: [] }));
-    await waitText("#file-msg", /지원하지 않는 스키마/);
-  });
-  await check("unsupported media rejected visibly", async () => {
-    await pick({ name: "bad.mp4", mimeType: "video/mp4", buffer: Buffer.from("not a video") }, analysis);
-    await waitText("#file-msg", /적용하지 못했습니다/);
-    assert.equal((await text("#data-badge")).trim(), "합성 샘플");
-  });
-  await check("valid local pair applies, sample recovery works", async () => {
-    await pick(okVideo, analysis);
-    await waitText("#data-badge", /로컬 파일/);
+  await check("sample choice loads the real pair with overlays and no demo button", async () => {
     await page.click("#btn-sample");
-    await waitText("#data-badge", /합성 샘플/);
+    await page.waitForFunction(() => document.getElementById("video").readyState >= 2, null, { timeout: 8000 });
+    await seekRange(1.0);
+    await page.waitForTimeout(200);
+    assert.ok((await overlayInk()) > 0, "overlay drawn");
+    assert.equal(await demoHidden(), true);
+    assert.equal((await text("#court-cue")).includes("분석 결과 없음"), false);
+  });
+  await check("picked video plays without bundled analysis", async () => {
+    await page.setInputFiles("#in-video", clip);
+    await waitText("#source-state", /선택한 영상, 분석 결과 없음/);
+    assert.equal(await text("#source-name"), clip.name); // textContent, not markup
+    assert.equal(await page.locator("#source-name b").count(), 0);
+    assert.match(await page.evaluate(() => document.getElementById("video").src), /^blob:/);
+    await waitText("#court-cue", /분석 결과 없음/);
+    await seekRange(1.0);
+    await page.waitForTimeout(200);
+    assert.equal(await overlayInk(), 0);
+    assert.equal(await demoHidden(), false);
+  });
+  await check("cancelled picker keeps the current video", async () => {
+    const before = await page.evaluate(() => document.getElementById("video").src);
+    await page.setInputFiles("#in-video", []);
+    await page.waitForTimeout(150);
+    assert.equal(await page.evaluate(() => document.getElementById("video").src), before);
+  });
+  await check("undecodable media shows a small error and keeps the current video", async () => {
+    const before = await page.evaluate(() => document.getElementById("video").src);
+    await page.setInputFiles("#in-video", { name: "bad.mp4", mimeType: "video/mp4", buffer: Buffer.from("not a video") });
+    await waitText("#source-state", /열 수 없습니다/);
+    assert.equal(await page.evaluate(() => document.getElementById("video").src), before);
+  });
+  await check("demo button restores the real pair and analysis", async () => {
+    await page.click("#btn-demo");
+    await page.waitForFunction(() => !document.getElementById("video").src.startsWith("blob:") && document.getElementById("video").readyState >= 2, null, { timeout: 8000 });
+    assert.equal(await demoHidden(), true);
+    await seekRange(1.0);
+    await page.waitForTimeout(200);
+    assert.ok((await overlayInk()) > 0);
+  });
+  await check("rapid pick then reset ends on the real pair", async () => {
+    await page.setInputFiles("#in-video", clip);
+    await page.click("#btn-demo", { force: true }).catch(() => page.evaluate(() => document.getElementById("btn-demo").click()));
+    await page.waitForTimeout(1500);
+    assert.equal(await page.evaluate(() => document.getElementById("video").src.startsWith("blob:")), false);
+    assert.equal(await demoHidden(), true);
   });
   await check("playback advances time", async () => {
     await page.click("#btn-play");

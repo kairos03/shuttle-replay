@@ -1,65 +1,50 @@
-# shuttle-replay web demo
+# shuttle-replay browser demo
 
-Browser-only static viewer for `shuttle-replay/analysis/v1` results. Plain HTML, CSS and
-ES modules; no framework, CDN, fonts, upload or network API. Published by the Docs workflow:
-`docs/build.py` copies `web/demo/` to `demo/` in the Pages artifact
-(`https://kairos03.github.io/shuttle-replay/demo/`).
+Static HTML/CSS/ES-module replay viewer, published at
+https://kairos03.github.io/shuttle-replay/demo/ by the Docs workflow.
+`docs/build.py` copies `web/demo/` verbatim into the Pages artifact.
 
-```
-web/
-  demo/                 static site (copied verbatim)
-    index.html, styles.css
-    js/analysis-model.js  parsing/validation, time lookup, trail policy (pure)
-    js/pair-loader.js     staged (video, analysis) loading; newest request wins
-    js/frame-clock.js     requestVideoFrameCallback loop with rAF fallback
-    js/app.js             DOM + canvas
-    assets/court-data.js  generated from src/shuttle_replay/court.py
-    assets/sample/        synthetic sample (see provenance.json)
-  build_sample.py       regenerate the sample with the real pipeline
-  serve.mjs             local static server with HTTP Range support
-  tests/                node --test unit tests
-  smoke/                optional Playwright browser smoke test
-```
+## Entry and local video
 
-## Sample provenance
+The first visit is empty. Choose **영상 업로드** or **샘플 보기** inside the
+left video area. No sample video or analysis is requested before that choice.
+Playback controls stay disabled until a video is ready. Nothing autoplays.
 
-`assets/sample/` is **synthetic**. `build_sample.py` runs
-`build_scene(seed=7)` → `calibrate` → `analyze` and writes `analysis.json` unchanged
-(no local paths). The pipeline's MPEG-4 Part 2 video is not browser-playable, so it is
-re-encoded frame by frame with the original PTS into H.264 MP4 and VP9 WebM;
-`provenance.json` records codecs, frame counts, PTS drift against the analysis and SHA-256
-digests. The audio is a 440 Hz test tone; sound is off by default.
+A selected video plays using a browser-local blob URL. It is not uploaded,
+and no inference is performed. The sample overlays are cleared and the page
+shows `선택한 영상, 분석 결과 없음`. The small `데모 영상` action restores
+the bundled sample. Desktop video/court widths remain 3:2; narrow screens stack.
 
-```bash
-uv run python web/build_sample.py           # rewrite sample + court-data.js
-uv run python web/build_sample.py --check   # verify analysis/court are current
-```
+## Real sample and limitations
 
-## Time matching
+`demo/assets/real/source_clip.mp4` is a 7.007-second, 210-frame excerpt of
+[Pexels video 35427619](https://www.pexels.com/video/intense-indoor-badminton-match-in-action-35427619/),
+used under the [Pexels License](https://www.pexels.com/license/).
+The media retains that license, not the repository's AGPL code license.
+No endorsement by Pexels or the depicted people is implied. See `NOTICE.md`.
 
-`analysis time = video currentTime + offset` (offset defaults to 0, editable in the UI).
-Frames are located by binary search over the analysis `pts_s` (variable frame rate is
-respected; no fixed fps is assumed). A frame is shown until the next frame's `pts_s`; past
-the last frame by more than 1.5 median frame durations nothing is drawn. Frame stepping
-seeks to just inside the target frame's PTS. If the source's first PTS was not zero, or the
-video was re-encoded with a different start, set the offset; the viewer warns when the
-video duration and analysis span disagree and never draws overlays it cannot place.
+`demo/assets/real/analysis.json` contains precomputed TrackNetV3 shuttle
+observations and four-player pose tracking. It is not browser inference or
+independently validated ground truth. Player floor coordinates use a manual
+reference calibration. The separate shuttle court-map layer is a conditional
+camera/flight reference, marked `≈`; it includes interpolated and held positions.
+Raw missing observations remain null; strict flights remain empty.
 
-## Drawing policy
+`demo/assets/sample/` is the earlier pipeline-generated synthetic regression
+fixture, not the UI's default or a real recording. `web/build_sample.py`
+regenerates that fixture and court geometry; it does not regenerate the real
+sample's detections. Model weights and private research logs are not shipped.
 
-* Green ring: observed pixel (`shuttle_observed_px`), video only.
-* Orange dot: conditional model pixel (`shuttle_model_px`) of an accepted flight; the court
-  view draws only `shuttle_model_xyz_m` X/Y. Height and coarse initial speed are labelled
-  model estimates; no IN/OUT verdicts.
-* Trails join only consecutive frames of the same segment and flight; they break at
-  `excluded_camera_cut`, null segments, detection gaps, rejected flights and flight or
-  segment boundaries. Points outside the video's intrinsic size are not drawn.
+## Verification
 
-## Tests
-
-```bash
-node --test web/tests/analysis-model.test.mjs web/tests/loader-clock.test.mjs web/tests/flight-context.test.mjs
+```sh
+node --test web/tests/*.test.mjs
 uv run pytest -q tests/test_web_demo.py
-# optional, needs playwright-core and a Chromium build:
-PLAYWRIGHT_CORE=/path/to/playwright-core node web/smoke/browser-smoke.mjs --out smoke-out
+uv run --only-group docs python docs/build.py
+uv run --only-group docs python docs/verify_i18n.py
+node web/serve.mjs
 ```
+
+The viewer uses actual `pts_s`, not a fixed frame-rate index. Source-image
+observations, player floor estimates and shuttle map references are separate
+layers. Missing detection coverage is not a measured location or accuracy claim.
