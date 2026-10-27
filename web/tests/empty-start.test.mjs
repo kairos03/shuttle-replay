@@ -93,6 +93,15 @@ async function boot() {
 }
 
 const settle = () => new Promise((r) => setTimeout(r, 20));
+// CI runners can defer the metadata timer beyond one arbitrary 20ms sleep.
+// Await the observable state, with a bounded failure, instead of racing assertions.
+async function waitFor(predicate) {
+  const deadline = performance.now() + 2000;
+  while (!predicate()) {
+    assert.ok(performance.now() < deadline, "source did not settle within 2 seconds");
+    await settle();
+  }
+}
 const pick = (input, file) => { input.files = file ? [file] : []; input.dispatch("change"); };
 const space = (env) => (env.docListeners.keydown || []).forEach((f) => f({ key: " ", target: { tagName: "BODY" }, preventDefault() {} }));
 
@@ -122,7 +131,7 @@ test("cancel and undecodable first pick keep the empty chooser with a short erro
   assert.equal(e.chooser.hidden, false);
   assert.equal(e.video.getAttribute("src"), null);
   pick(e["in-video-first"], { name: "bad.mp4" });
-  await settle();
+  await waitFor(() => e["source-msg"].class_error === true);
   assert.equal(e.chooser.hidden, false);
   assert.equal(e["source-actions"].hidden, true);
   assert.equal(e.video.getAttribute("src"), null);
@@ -137,7 +146,7 @@ test("own video: blob only, no analysis fetched, chooser gone; header sample swi
   const env = await boot();
   const e = env.els;
   pick(e["in-video-first"], { name: "<b>mine</b>.mov" });
-  await settle();
+  await waitFor(() => e.chooser.hidden);
   assert.deepEqual(env.fetches, []);
   assert.match(e.video.getAttribute("src"), /^blob:/);
   assert.equal(e.chooser.hidden, true);
@@ -149,7 +158,7 @@ test("own video: blob only, no analysis fetched, chooser gone; header sample swi
   assert.equal(e["court-cue"].text, "분석 결과 없음");
   assert.equal(e["btn-demo"].hidden, false);
   e["btn-demo"].click();
-  await settle();
+  await waitFor(() => e.video.getAttribute("src") === "assets/real/source_clip.mp4");
   assert.deepEqual(env.fetches, ["assets/real/analysis.json"]);
   assert.equal(e.video.getAttribute("src"), "assets/real/source_clip.mp4");
   assert.equal(e["court-cue"].text, "셔틀 위치 ≈ 추정");
@@ -161,7 +170,7 @@ test("sample choice loads the unchanged real pair once, with its analysis cue", 
   const env = await boot();
   const e = env.els;
   e["btn-sample"].click();
-  await settle();
+  await waitFor(() => e.video.getAttribute("src") === "assets/real/source_clip.mp4");
   assert.deepEqual(env.fetches, ["assets/real/analysis.json"]);
   assert.equal(e.video.getAttribute("src"), "assets/real/source_clip.mp4");
   assert.equal(e.chooser.hidden, true);
@@ -176,11 +185,11 @@ test("rapid own pick then sample: sample wins, stale blob released", async () =>
   const e = env.els;
   env.probeMode = "manual";
   pick(e["in-video-first"], { name: "slow.mp4" });
-  await settle();
+  await waitFor(() => env.pending.length === 1);
   e["btn-sample"].click();
-  await settle();
+  await waitFor(() => env.pending.length === 2);
   for (const p of env.pending.splice(0).reverse()) p.settle();
-  await settle();
+  await waitFor(() => e.video.getAttribute("src") === "assets/real/source_clip.mp4");
   assert.equal(e.video.getAttribute("src"), "assets/real/source_clip.mp4");
   assert.equal(e["court-cue"].text, "셔틀 위치 ≈ 추정");
   assert.equal(env.live.size, 0);
