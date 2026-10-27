@@ -21,7 +21,7 @@
   <a href="#user-guide">Usage guide</a> |
   <a href="docs/schemas.md">Schemas (English)</a> |
   <a href="https://kairos03.github.io/shuttle-replay/">Docs</a> |
-  <a href="https://kairos03.github.io/shuttle-replay/demo/">Web demo</a>
+  <a href="https://kairos03.github.io/shuttle-replay/demo/"><strong>Try the demo</strong></a>
 </p>
 
 ## Overview
@@ -72,10 +72,11 @@ Writes `demo/inputs/` (synthetic video, tracks, review, calibration input),
 ### Web demo (browser only)
 
 An interactive viewer (Korean UI) is published with the docs at
-<https://kairos03.github.io/shuttle-replay/demo/>. It opens a synthetic sample made by the
-real pipeline (`web/build_sample.py`; not real footage) and can open a local video plus its
-`analysis.json` without uploading anything. To serve it locally (Range requests are needed
-for video seeking, which `python -m http.server` lacks):
+<https://kairos03.github.io/shuttle-replay/demo/>. Choose **샘플 보기** to replay a real
+badminton clip with precomputed player and shuttle overlays, or **영상 업로드** to play
+your own video locally. Selected videos are not uploaded and are not automatically analyzed.
+The sample's court positions are reference estimates, not measured 3D ground truth.
+To serve it locally (with HTTP Range support for seeking):
 
 ```bash
 node web/serve.mjs        # http://127.0.0.1:8000/shuttle-replay/demo/

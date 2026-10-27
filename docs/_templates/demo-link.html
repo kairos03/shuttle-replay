@@ -1,0 +1,14 @@
+{# Shared entry point: canonical URL deliberately avoids locale-relative demo paths. #}
+{% set demo_labels = {
+  "en": "Try the demo",
+  "zh": "体验演示",
+  "ja": "デモを試す",
+  "ru": "Открыть демо",
+  "ko": "웹 데모 체험하기",
+  "es": "Probar la demo",
+  "fr": "Essayer la démo",
+  "de": "Demo ausprobieren",
+  "pt-BR": "Experimentar a demo",
+  "it": "Prova la demo"
+} %}
+<p class="docs-demo-link"><a href="{{ docs_site_url }}demo/"><strong>{{ demo_labels[docs_lang] }}</strong></a></p>

@@ -20,7 +20,8 @@
   <a href="#workflow">Fluxo de trabalho</a> |
   <a href="#user-guide">Guia de uso</a> |
   <a href="docs/schemas.md">Formatos de dados (em inglês)</a> |
-  <a href="https://kairos03.github.io/shuttle-replay/pt-BR/">Documentação</a>
+  <a href="https://kairos03.github.io/shuttle-replay/pt-BR/">Documentação</a> |
+  <a href="https://kairos03.github.io/shuttle-replay/demo/"><strong>Experimentar a demo</strong></a>
 </p>
 
 ## Visão geral

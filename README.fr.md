@@ -20,7 +20,8 @@
   <a href="#workflow">Déroulement</a> |
   <a href="#user-guide">Guide d’utilisation</a> |
   <a href="docs/schemas.md">Formats de données (en anglais)</a> |
-  <a href="https://kairos03.github.io/shuttle-replay/fr/">Documentation</a>
+  <a href="https://kairos03.github.io/shuttle-replay/fr/">Documentation</a> |
+  <a href="https://kairos03.github.io/shuttle-replay/demo/"><strong>Essayer la démo</strong></a>
 </p>
 
 ## Présentation

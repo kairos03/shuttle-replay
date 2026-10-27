@@ -21,7 +21,7 @@
   <a href="#user-guide">사용 가이드</a> |
   <a href="docs/schemas.md">입력 형식 (영어)</a> |
   <a href="https://kairos03.github.io/shuttle-replay/ko/">문서</a> |
-  <a href="https://kairos03.github.io/shuttle-replay/demo/">웹 데모</a>
+  <a href="https://kairos03.github.io/shuttle-replay/demo/"><strong>웹 데모 체험하기</strong></a>
 </p>
 
 ## 개요
@@ -72,11 +72,13 @@ uv run shuttle-replay demo --out-dir demo
 
 ### 웹 데모 (브라우저 전용)
 
-문서 사이트와 함께 <https://kairos03.github.io/shuttle-replay/demo/> 에 대화형 뷰어를
-게시합니다. 실제 파이프라인으로 만든 합성 샘플(`web/build_sample.py`, 실제 영상 아님)을
-바로 보여 주며, 로컬 영상과 그 `analysis.json`을 업로드 없이 열 수 있습니다. 로컬에서 볼
-때는 영상 탐색에 필요한 Range 요청을 지원하는 서버를 쓰세요(`python -m http.server`는
-지원하지 않음):
+[웹 데모 체험하기](https://kairos03.github.io/shuttle-replay/demo/)
+
+첫 화면에서 **샘플 보기**를 누르면 실제 배드민턴 영상과 미리 계산한 선수 및 셔틀
+표시를 볼 수 있습니다. **영상 업로드**를 누르면 내 영상을 브라우저 안에서 재생합니다.
+선택한 영상은 서버로 전송하거나 자동 분석하지 않습니다. 샘플의 코트 위치는 참고용
+추정이며 실제 3D 측정값이 아닙니다. 로컬에서 볼 때는 영상 탐색용 Range 요청을
+지원하는 서버를 쓰세요:
 
 ```bash
 node web/serve.mjs        # http://127.0.0.1:8000/shuttle-replay/demo/

@@ -20,7 +20,8 @@
   <a href="#workflow">ワークフロー</a> |
   <a href="#user-guide">使い方</a> |
   <a href="docs/schemas.md">データ形式（英語）</a> |
-  <a href="https://kairos03.github.io/shuttle-replay/ja/">ドキュメント</a>
+  <a href="https://kairos03.github.io/shuttle-replay/ja/">ドキュメント</a> |
+  <a href="https://kairos03.github.io/shuttle-replay/demo/"><strong>デモを試す</strong></a>
 </p>
 
 ## 概要
