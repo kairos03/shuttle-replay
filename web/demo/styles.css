@@ -76,7 +76,7 @@ input[type="number"] { width: 7.5em; font-variant-numeric: tabular-nums; }
 .panel .muted { color: #b8c5bc; }
 .video-box { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; }
 .video-box video, .video-box .overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
-.video-box video { object-fit: fill; }
+.video-box video { object-fit: contain; }
 .overlay { pointer-events: none; }
 .video-msg {
   position: absolute; left: 8px; right: 8px; bottom: 8px; margin: 0; padding: 6px 8px;

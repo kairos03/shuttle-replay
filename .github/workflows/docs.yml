@@ -40,7 +40,7 @@ jobs:
       - name: Test web demo viewer (runner's preinstalled Node, no npm deps)
         run: |
           node --version
-          node --test web/tests/analysis-model.test.mjs web/tests/loader-clock.test.mjs web/tests/flight-context.test.mjs
+          node --test web/tests/*.test.mjs
       - name: Install docs dependencies
         run: uv sync --locked --only-group docs
       - name: Build all languages (strict)

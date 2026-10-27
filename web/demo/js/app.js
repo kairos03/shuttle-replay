@@ -18,6 +18,7 @@ import {
 } from "./analysis-model.js";
 import { COURT } from "../assets/court-data.js";
 import { FrameClock } from "./frame-clock.js";
+import { containTransform, mapTrailRuns } from "./view-geometry.js";
 import { PairLoader } from "./pair-loader.js";
 
 const SAMPLE_DIR = "assets/sample/";
@@ -144,7 +145,6 @@ function activate(pair, offset, isSample) {
   v.load();
   v.playbackRate = Number(el.speed.value);
   el.inOffset.value = String(offset);
-  el.videoBox.style.aspectRatio = `${pair.meta.width} / ${pair.meta.height}`;
 
   const warnings = [];
   const oob = outOfBoundsCount(pair.model, pair.meta.width, pair.meta.height);
@@ -277,8 +277,8 @@ function drawOverlay(fr) {
   const m = state.model;
   if (!fr || !state.meta || fr.segmentKey === null) return;
   const { width: vw, height: vh } = state.meta;
-  const sx = cv.width / vw;
-  const sy = cv.height / vh;
+  // Same contain rect as the <video> (object-fit: contain) for rings, dots and trails.
+  const t = containTransform(vw, vh, cv.width, cv.height);
   const r = 4 * dpr;
   const layers = [
     ["model", el.tgModel.checked, (f) => f.modelPx, COLORS.model, "#4a2300"],
@@ -288,22 +288,14 @@ function drawOverlay(fr) {
     if (!on) continue;
     if (el.tgTrail.checked) {
       // Split at any out-of-image point so no segment is drawn through it.
-      let run = [];
-      for (const i of trailIndices(m, fr.index, kind, 15)) {
-        const p = get(m.frames[i]);
-        if (!inImage(p, vw, vh)) {
-          drawPolyline(ctx, run, color, 2 * dpr);
-          run = [];
-          continue;
-        }
-        run.push([p[0] * sx, p[1] * sy]);
-      }
-      drawPolyline(ctx, run, color, 2 * dpr);
+      const pts = trailIndices(m, fr.index, kind, 15).map((i) => get(m.frames[i]));
+      for (const run of mapTrailRuns(pts, t, vw, vh)) drawPolyline(ctx, run, color, 2 * dpr);
     }
     const p = get(fr);
     if (!p || !inImage(p, vw, vh)) continue;
-    if (kind === "observed") drawRing(ctx, p[0] * sx, p[1] * sy, r * 1.8, color, stroke, dpr);
-    else if (fr.modelFlightId !== null) drawDot(ctx, p[0] * sx, p[1] * sy, r, color, stroke);
+    const [x, y] = t.map(p);
+    if (kind === "observed") drawRing(ctx, x, y, r * 1.8, color, stroke, dpr);
+    else if (fr.modelFlightId !== null) drawDot(ctx, x, y, r, color, stroke);
   }
 }
 
