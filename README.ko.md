@@ -20,7 +20,8 @@
   <a href="#workflow">작업 흐름</a> |
   <a href="#user-guide">사용 가이드</a> |
   <a href="docs/schemas.md">입력 형식 (영어)</a> |
-  <a href="https://kairos03.github.io/shuttle-replay/ko/">문서</a>
+  <a href="https://kairos03.github.io/shuttle-replay/ko/">문서</a> |
+  <a href="https://kairos03.github.io/shuttle-replay/demo/">웹 데모</a>
 </p>
 
 ## 개요
@@ -68,6 +69,20 @@ uv run shuttle-replay demo --out-dir demo
   <img src="docs/assets/demo.gif" alt="합성 데모 리플레이: 원본 화면 옆에 코트 탑뷰" width="90%">
   <br><sub><code>demo</code>로 생성한 합성 시연입니다. 실제 환경의 정확도를 나타내지 않습니다.</sub>
 </p>
+
+### 웹 데모 (브라우저 전용)
+
+문서 사이트와 함께 <https://kairos03.github.io/shuttle-replay/demo/> 에 대화형 뷰어를
+게시합니다. 실제 파이프라인으로 만든 합성 샘플(`web/build_sample.py`, 실제 영상 아님)을
+바로 보여 주며, 로컬 영상과 그 `analysis.json`을 업로드 없이 열 수 있습니다. 로컬에서 볼
+때는 영상 탐색에 필요한 Range 요청을 지원하는 서버를 쓰세요(`python -m http.server`는
+지원하지 않음):
+
+```bash
+node web/serve.mjs        # http://127.0.0.1:8000/shuttle-replay/demo/
+```
+
+시간 맞춤, 테스트, 샘플 재생성은 [web/README.md](web/README.md)를 참고하세요.
 
 <a id="workflow"></a>
 ## 작업 흐름

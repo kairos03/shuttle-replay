@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>shuttle-replay 웹 데모</title>
+<link rel="stylesheet" href="styles.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#stage">재생 화면으로 건너뛰기</a>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-name">shuttle-replay</span>
+    <span class="brand-sub">리플레이 뷰어</span>
+    <span class="badge" id="data-badge" title="이 데이터는 합성된 것이며 실제 경기 영상이 아닙니다">합성 샘플</span>
+  </div>
+  <nav class="links" aria-label="외부 링크">
+    <a href="../ko/">문서</a>
+    <a href="https://github.com/kairos03/shuttle-replay" rel="noopener">소스</a>
+  </nav>
+</header>
+
+<main>
+  <section class="toolbar" aria-label="재생 제어">
+    <div class="group">
+      <button type="button" id="btn-play" aria-keyshortcuts="Space">재생</button>
+      <button type="button" id="btn-prev" aria-label="이전 분석 프레임" aria-keyshortcuts="ArrowLeft">◀ 프레임</button>
+      <button type="button" id="btn-next" aria-label="다음 분석 프레임" aria-keyshortcuts="ArrowRight">프레임 ▶</button>
+      <label class="inline">속도
+        <select id="sel-speed">
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+        </select>
+      </label>
+    </div>
+    <div class="group toggles" role="group" aria-label="표시 레이어">
+      <label class="chip chip-observed"><input type="checkbox" id="tg-observed" checked> 관측 픽셀</label>
+      <label class="chip chip-model"><input type="checkbox" id="tg-model" checked> 조건부 모델</label>
+      <label class="chip"><input type="checkbox" id="tg-trail" checked> 궤적</label>
+      <button type="button" id="btn-sound" aria-pressed="false">소리 꺼짐</button>
+    </div>
+    <div class="timeline">
+      <label for="rng-time" class="sr-only">타임라인 (분석 시각)</label>
+      <canvas id="cv-strip" class="strip" aria-hidden="true"></canvas>
+      <input type="range" id="rng-time" min="0" max="1" step="0.001" value="0">
+    </div>
+  </section>
+
+  <section id="stage" class="stage" aria-label="리플레이 화면" tabindex="-1">
+    <figure class="panel panel-source">
+      <figcaption><strong>원본 영상</strong> <span class="muted">· 초록 고리 = 관측 픽셀, 주황 점 = 조건부 모델 (영상 좌표)</span></figcaption>
+      <div class="video-box" id="video-box">
+        <video id="video" playsinline muted preload="auto"></video>
+        <canvas id="cv-overlay" class="overlay" aria-hidden="true"></canvas>
+        <p class="video-msg" id="video-msg" hidden></p>
+      </div>
+    </figure>
+    <figure class="panel panel-court">
+      <figcaption><strong>코트 위에서 본 모델 XY</strong> <span class="muted">· 모델만 표시, 관측 아님</span></figcaption>
+      <div class="court-box"><canvas id="cv-court" role="img" aria-label="코트 평면도: 조건부 모델 위치"></canvas></div>
+    </figure>
+  </section>
+
+  <section class="status" aria-label="현재 프레임">
+    <dl class="readout">
+      <div><dt>분석 시각</dt><dd id="ro-time">–</dd></div>
+      <div><dt>프레임</dt><dd id="ro-frame">–</dd></div>
+      <div><dt>세그먼트</dt><dd id="ro-seg">–</dd></div>
+      <div><dt>비행</dt><dd id="ro-flight">–</dd></div>
+      <div><dt>모델 높이 (추정)</dt><dd id="ro-z">–</dd></div>
+    </dl>
+    <p class="state" id="ro-state" role="status" aria-live="polite">불러오는 중…</p>
+  </section>
+
+  <div class="lower">
+    <section class="flights" aria-labelledby="h-flights">
+      <h2 id="h-flights">비행 목록</h2>
+      <p class="muted small">항목을 누르면 사람이 검토한 접촉 시각(t0) 이후 첫 분석 프레임으로 이동합니다. 채택되지 않은 비행도 그대로 표시하며, 그 모델은 그리지 않습니다.</p>
+      <ol id="flight-list" class="flight-list"></ol>
+      <p id="flight-empty" class="muted" hidden>이 분석에는 비행이 없습니다.</p>
+    </section>
+
+    <aside class="side">
+      <section class="files" aria-labelledby="h-files">
+        <h2 id="h-files">로컬 파일 열기</h2>
+        <p class="muted small">파일은 이 브라우저 안에서만 읽습니다. 업로드·네트워크 전송 없음.</p>
+        <label class="file">원본 영상
+          <input type="file" id="in-video" accept="video/*">
+        </label>
+        <label class="file">analysis.json
+          <input type="file" id="in-analysis" accept=".json,application/json">
+        </label>
+        <label class="inline">시간 오프셋 (초)
+          <input type="number" id="in-offset" value="0" step="0.001" inputmode="decimal" aria-describedby="offset-help">
+        </label>
+        <p id="offset-help" class="muted small">분석 시각 = 영상 재생 시각 + 오프셋. 원본의 첫 PTS가 0이 아니었거나 다시 인코딩해 시작점이 바뀐 경우에만 조정하세요.</p>
+        <div class="row">
+          <button type="button" id="btn-apply" disabled>이 쌍 적용</button>
+          <button type="button" id="btn-sample">샘플로 복구</button>
+        </div>
+        <p id="file-msg" class="file-msg" role="alert" aria-live="assertive"></p>
+      </section>
+
+      <section class="roles" aria-labelledby="h-roles">
+        <h2 id="h-roles">데이터 역할</h2>
+        <dl>
+          <dt>원본 영상</dt><dd>입력 영상 그대로. 샘플은 파이프라인이 만든 합성 영상이며 실제 경기가 아닙니다.</dd>
+          <dt><span class="dot dot-observed"></span>관측 픽셀</dt><dd>제공된 2D 검출을 바꾸지 않고 표시. 영상 위에만 그립니다.</dd>
+          <dt>사람 검토</dt><dd>접촉 시각·높이, 착지 영역, 보정점. 비행 목록의 t0 기준입니다.</dd>
+          <dt><span class="dot dot-model"></span>조건부 모델</dt><dd>검토 사전값 아래 중력+항력 모델을 관측 픽셀에 맞춘 결과. 측정값이 아니며 높이·초기 속도는 추정입니다. IN/OUT 판정을 하지 않습니다.</dd>
+        </dl>
+        <p class="muted small">카메라 컷, 세그먼트 없음, 검출 공백, 채택되지 않은 비행, 서로 다른 비행·세그먼트 사이에는 선을 잇지 않습니다.</p>
+      </section>
+    </aside>
+  </div>
+</main>
+</body>
+</html>

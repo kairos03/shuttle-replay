@@ -1,0 +1,30 @@
+{
+  "synthetic": true,
+  "real_footage": false,
+  "generator": "web/build_sample.py",
+  "package_version": "0.1.0",
+  "seed": 7,
+  "pipeline": [
+    "shuttle_replay.synthetic.build_scene(seed=7)",
+    "shuttle_replay.calibration.calibrate",
+    "shuttle_replay.analysis.analyze"
+  ],
+  "source_video_note": "pipeline writes MPEG-4 Part 2; re-encoded frame by frame with original PTS for browser playback. Audio is a synthetic 440 Hz test tone.",
+  "analysis_sha256": "cd7691b6264c0d9121a03ef7bced158f61d31b841b95d765692be3f1c6c4b51c",
+  "media": {
+    "synthetic_rally.mp4": {
+      "video_codec": "libx264",
+      "audio_codec": "aac",
+      "frames": 180,
+      "max_pts_drift_vs_analysis_s": 0.0,
+      "sha256": "68571b5a7948480e5753fa44d72bc7b693c46421e44c4ec9a86d9f7a278bfdc6"
+    },
+    "synthetic_rally.webm": {
+      "video_codec": "libvpx-vp9",
+      "audio_codec": "libopus",
+      "frames": 180,
+      "max_pts_drift_vs_analysis_s": 0.0005,
+      "sha256": "efdb44416e593dfb4c5170b1bc3363771ef45726fc303b502ff69980c686eb5f"
+    }
+  }
+}

@@ -6,6 +6,8 @@ Sphinx build (own ``language``, ``<html lang>`` and search index) under
 
     uv run --only-group docs python docs/build.py            # all ten languages
     uv run --only-group docs python docs/build.py --lang en  # only English
+
+The static web demo (``web/demo/``) is copied unchanged to ``demo/``.
 """
 
 import argparse
@@ -18,6 +20,7 @@ from pathlib import Path
 DOCS = Path(__file__).resolve().parent
 BUILD = DOCS / "_build"
 OUT = BUILD / "html"
+DEMO_SRC = DOCS.parent / "web" / "demo"
 LANGS = ["en", "zh", "ja", "ru", "ko", "es", "fr", "de", "pt-BR", "it"]
 
 # Old URL of the Korean guide, now served as the Korean locale's guide page.
@@ -48,6 +51,14 @@ def build(lang: str) -> int:
     return subprocess.run(cmd, env={**os.environ, "DOCS_LANG": lang}).returncode
 
 
+def copy_demo(out: Path = OUT) -> Path:
+    """Copy the browser-only viewer into the site as plain static files."""
+    dest = out / "demo"
+    shutil.rmtree(dest, ignore_errors=True)
+    shutil.copytree(DEMO_SRC, dest, ignore=shutil.ignore_patterns(".*", "__pycache__"))
+    return dest
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
@@ -62,6 +73,7 @@ def main(argv=None) -> int:
     if "en" in langs:
         for name, target in _REDIRECTS.items():
             (OUT / name).write_text(_REDIRECT_HTML.format(target=target), encoding="utf-8")
+    copy_demo()
     (OUT / ".nojekyll").touch()
     if failed:
         print(f"[docs] FAILED: {', '.join(failed)}", file=sys.stderr)
