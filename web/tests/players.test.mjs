@@ -90,7 +90,21 @@ test("valid players parse into frozen camelCase structures with stable short IDs
   assert.equal(p.anchorStatus, "ankle_midpoint");
   for (const o of [fr.players, p, p.box, p.anchor, p.courtXy, p.keypoints, p.keypoints[15]]) assert.ok(Object.isFrozen(o));
   assert.equal(m.hasPlayers, true);
-  assert.deepEqual(PLAYER_SHORT, { "near-left": "N1", "near-right": "N2", "far-left": "F1", "far-right": "F2" });
+  assert.deepEqual(PLAYER_SHORT, { "near-left": "N1", "near-right": "N2", "far-left": "F1", "far-right": "F2", near: "N", far: "F" });
+});
+
+test("automatic_reference calibration permits labelled projection; singles ids parse as N/F", () => {
+  const fx = withPlayers({ calibration: calib({ status: "automatic_reference" }) });
+  for (const f of fx.frames) f.players = [player("near", [3, 11]), player("far", [3, 2])];
+  const m = validateAnalysis(fx);
+  assert.equal(m.playerCalibration.status, "automatic_reference");
+  assert.equal(m.playerCalibration.permitsProjection, true);
+  assert.deepEqual(m.frames[0].players.map((p) => p.short), ["N", "F"]);
+  assert.deepEqual([...m.frames[0].players[0].courtXy], [3, 11]);
+  assert.ok(playersMapAvailable(m));
+  // Automatic calibration without enough anchors still cannot project.
+  const weak = withPlayers({ calibration: calib({ status: "automatic_reference", anchors: [] }) });
+  assert.equal(validateAnalysis(weak).frames[0].players[0].courtXy, null);
 });
 
 test("valid nulls are preserved: anchor, court_xy_m, missing keypoints", () => {

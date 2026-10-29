@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Pure, DOM-free player helpers: stable identities, counts, court trails and label fitting.
 // Court positions come only from the file's per-frame court_xy_m under a validated manual
-// reference calibration; nothing here invents, holds or interpolates a position.
+// or automatic reference calibration; nothing here invents, holds or interpolates a position.
 
 export const PLAYER_IDS = Object.freeze(["near-left", "near-right", "far-left", "far-right"]);
-export const PLAYER_SHORT = Object.freeze({ "near-left": "N1", "near-right": "N2", "far-left": "F1", "far-right": "F2" });
+/** Singles identities (automatic local analysis): one player per court half. */
+export const SINGLES_PLAYER_IDS = Object.freeze(["near", "far"]);
+export const PLAYER_SHORT = Object.freeze({ "near-left": "N1", "near-right": "N2", "far-left": "F1", "far-right": "F2", near: "N", far: "F" });
 export const PLAYER_COLORS = Object.freeze({
   "near-left": "#4fc3f7",
   "near-right": "#c58cff",
   "far-left": "#ffd84d",
   "far-right": "#ff6f9c",
+  near: "#4fc3f7",
+  far: "#ffd84d",
 });
 /** COCO-17 ankle keypoint indices (left, right). */
 export const ANKLES = Object.freeze([15, 16]);

@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // DOM wiring for the minimal shuttle-replay viewer: the bundled real clip with its
-// analysis, or a video the user picks (browser-local blob URL, no analysis). All file
-// names and messages are rendered with textContent only.
+// analysis, or a video the user picks (browser-local blob URL). A picked video is analyzed
+// automatically inside this browser (decode, models, court and trajectory in a worker; no
+// upload) and the validated result is replayed. All file names and messages use textContent.
 
-import { frameState, inImage, lookupFrame, parseAnalysisText, toAnalysisTime, toVideoTime, trailIndices } from "./analysis-model.js";
+import { frameState, inImage, lookupFrame, parseAnalysisText, toAnalysisTime, validateAnalysis, toVideoTime, trailIndices } from "./analysis-model.js";
 import { COURT } from "../assets/court-data.js";
 import { FrameClock } from "./frame-clock.js";
 import { containTransform, mapTrailRuns } from "./view-geometry.js";
 import { PairLoader } from "./pair-loader.js";
 import { plainCopy } from "./presentation.js";
-import { ANKLES, PLAYER_COLORS, courtMarkerVisible, fitLabel, playerTrail } from "./players.js";
+import { ANKLES, PLAYER_COLORS, courtMarkerVisible, fitLabel, playerTrail, playersMapAvailable } from "./players.js";
+import { BrowserAnalyzer } from "../browser/analyzer.mjs";
 import { SHUTTLE_MAP_COLOR, shuttleEdgeArrow, shuttleLabelBox, shuttleRefLabel, shuttleRefTrail } from "./shuttle-map.js";
 
 const SAMPLE_DIR = "assets/real/";
@@ -17,6 +19,14 @@ const OFFSET = 0; // analysis time = video time; the bundled pair starts at PTS 
 const COLORS = { observed: "#2fe36b", model: "#ff8a1f", line: "#e9efe9", net: "#ffffff" };
 const PROBE_TIMEOUT_MS = 15000;
 const NO_ANALYSIS = "선택한 영상, 분석 결과 없음";
+const AUTO_DONE = "자동 분석 결과";
+const STAGE_LABELS = {
+  read: "영상 읽기", decode: "영상 디코딩", load_models: "모델 불러오기", models: "모델 불러오기", pose_frames: "선수 프레임 준비",
+  shuttle: "셔틀 추적", tracknet: "셔틀 추적", physics_runtime: "물리 엔진 불러오기", trajectory: "궤적 추정",
+  pose: "선수 검출", inference: "셔틀과 선수 검출", calibration_frames: "코트 프레임 준비", court: "코트 인식",
+  calibration: "코트 인식", players: "선수 위치", flights: "궤적 추정", physics: "궤적 추정", export: "결과 정리", done: "결과 정리",
+};
+const BAND_LABELS = { decode: "영상 디코딩", models: "셔틀과 선수 검출", calibration: "코트 인식", physics: "궤적 추정" };
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -24,9 +34,11 @@ const el = {
   range: $("rng-time"), play: $("btn-play"), inVideo: $("in-video"), inVideoFirst: $("in-video-first"), demo: $("btn-demo"),
   sample: $("btn-sample"), chooser: $("chooser"), sourceActions: $("source-actions"),
   sourceMsg: $("source-msg"), sourceState: $("source-state"), sourceName: $("source-name"), courtCue: $("court-cue"),
+  stage: $("stage"), analyzing: $("analyzing"), analyzingLabel: $("analyzing-label"), analyzingProgress: $("analyzing-progress"),
+  cancel: $("btn-cancel"),
 };
 
-const state = { model: null, meta: null, videoError: null };
+const state = { model: null, meta: null, videoError: null, analyzing: false };
 
 // ---------- loading ----------
 
@@ -61,6 +73,8 @@ const loader = new PairLoader({
   revokeURL: (url) => URL.revokeObjectURL(url),
 });
 
+const analyzer = new BrowserAnalyzer();
+
 function setSourceMsg(text, name = "", isError = false) {
   el.sourceState.textContent = text;
   el.sourceName.textContent = name;
@@ -70,6 +84,8 @@ function setSourceMsg(text, name = "", isError = false) {
 
 async function loadSample() {
   const gen = loader.cancel(); // a reset supersedes any in-flight user selection
+  analyzer.cancel();
+  setAnalyzing(false);
   setSourceMsg("불러오는 중…");
   let text;
   try {
@@ -86,10 +102,96 @@ async function loadSample() {
   finishApply(result);
 }
 
+function stageLabel(p) {
+  return STAGE_LABELS[p.stage] || BAND_LABELS[p.band] || "분석";
+}
+
 async function loadUserVideo(file) {
+  analyzer.cancel(); // a new pick terminates the previous worker
+  setAnalyzing(false);
   setSourceMsg("불러오는 중…", file.name);
   const result = await loader.apply({ video: { file }, analysis: null, label: file.name });
-  finishApply(result);
+  if (result.status !== "committed") return finishApply(result);
+  const gen = loader.generation;
+  const isCurrent = () => gen === loader.generation;
+  setAnalyzing(true);
+  activate(result.pair); // the original video is visible (paused) under the overlay
+  setSourceMsg("자동 분석 중…", file.name);
+  const r = await analyzer.analyze(file, {
+    onProgress: (p) => {
+      if (!isCurrent()) return;
+      const pct = Math.floor(100 * Math.max(0, Math.min(1, p.value)));
+      const text = `${stageLabel(p)} ${pct}%`;
+      el.analyzingLabel.textContent = text;
+      el.analyzingProgress.value = pct;
+    },
+  });
+  if (!isCurrent() || r.status === "cancelled") return;
+  let model = null;
+  let error = r.error && r.error.message;
+  if (r.status === "done") {
+    try {
+      model = validateAnalysis(r.doc);
+    } catch (e) {
+      error = `분석 결과 검증 실패: ${e.message}`;
+    }
+  }
+  const pair = model && loader.attachModel(gen, model);
+  setAnalyzing(false);
+  if (!pair) {
+    // The original video stays playable; nothing from the failed job is shown.
+    showCourtCue(null);
+    setSourceMsg(`자동 분석 실패: ${String(error || "알 수 없는 오류").slice(0, 320)} 영상만 재생합니다.`, file.name, true);
+    return;
+  }
+  activate(pair);
+  el.stage.dataset.analysis = JSON.stringify(analysisSummary(model));
+  el.video.play().catch(() => {});
+}
+
+/** Counts of what the attached analysis can draw (read by the browser smoke test). */
+function analysisSummary(m) {
+  let observed = 0, model = 0, players = 0, playersOnCourt = 0, mapRef = 0;
+  const flights = new Set();
+  for (const fr of m.frames) {
+    if (fr.observed) observed++;
+    if (fr.modelPx && fr.modelFlightId !== null) {
+      model++;
+      flights.add(fr.modelFlightId);
+    }
+    if (fr.players.length) players++;
+    if (fr.players.some((p) => p.courtXy !== null)) playersOnCourt++;
+    if (fr.shuttleMapRef) mapRef++;
+  }
+  return { frames: m.frames.length, observed, model, flights: flights.size, players, playersOnCourt, mapRef, calibration: m.playerCalibration.status };
+}
+
+/** Cancel from the overlay: the worker is terminated and the picked video stays playable. */
+function cancelAnalysis() {
+  if (!state.analyzing) return;
+  analyzer.cancel();
+  loader.cancel();
+  setAnalyzing(false);
+  showCourtCue(null);
+  setSourceMsg("분석을 취소했습니다. 영상만 재생합니다.", (loader.active && loader.active.label) || "");
+}
+
+/**
+ * Processing: one overlay covers both the video and the court, the stage is aria-busy, and
+ * Play and the timeline stay disabled until the analyzed pair is active. Header actions
+ * (replace video, demo) and the overlay's cancel stay usable.
+ */
+function setAnalyzing(on) {
+  state.analyzing = on;
+  if (on) delete el.stage.dataset.analysis;
+  el.analyzing.hidden = !on;
+  el.stage.setAttribute("aria-busy", on ? "true" : "false");
+  if (on) {
+    el.analyzingLabel.textContent = "자동 분석 준비 중";
+    el.analyzingProgress.value = 0;
+  }
+  if (!el.chooser.hidden) return;
+  el.play.disabled = el.range.disabled = on;
 }
 
 function finishApply(result) {
@@ -113,7 +215,7 @@ function activate(pair) {
   v.load();
   setChosen(true);
   el.demo.hidden = !pair.owned;
-  if (pair.owned) setSourceMsg(NO_ANALYSIS, pair.label);
+  if (pair.owned) setSourceMsg(pair.model ? AUTO_DONE : NO_ANALYSIS, pair.label);
   else setSourceMsg("");
   showCourtCue(pair.model);
   setRange();
@@ -125,12 +227,13 @@ function activate(pair) {
 function setChosen(on) {
   el.chooser.hidden = on;
   el.sourceActions.hidden = !on;
-  el.play.disabled = el.range.disabled = !on;
+  el.play.disabled = el.range.disabled = !on || state.analyzing;
 }
 
 /** Back to the empty first screen (bfcache restore after dispose): nothing is loaded. */
 function showEmpty() {
   clock.stop();
+  setAnalyzing(false);
   state.model = state.meta = state.videoError = null;
   el.video.removeAttribute("src");
   el.video.load();
@@ -146,12 +249,17 @@ function showCourtCue(m) {
   el.courtCue.replaceChildren();
   el.courtCue.dataset.kind = m ? "analysis" : "none";
   if (!m) {
-    el.courtCue.textContent = "분석 결과 없음";
-  } else if (m.hasShuttleMapRef) {
-    const key = document.createElement("span");
-    key.className = "key key-shuttle-map";
-    key.setAttribute("aria-hidden", "true");
-    el.courtCue.append(key, "셔틀 위치 ≈ 추정");
+    el.courtCue.textContent = state.analyzing ? "분석 중" : "분석 결과 없음";
+  } else {
+    // Automatic results: player floor cue and the conditional shuttle cue, side by side.
+    const auto = m.playerCalibration.status === "automatic_reference";
+    if (auto && playersMapAvailable(m)) el.courtCue.append("선수 위치 ≈ 자동 코트 기준");
+    if (m.hasShuttleMapRef) {
+      const key = document.createElement("span");
+      key.className = "key key-shuttle-map";
+      key.setAttribute("aria-hidden", "true");
+      el.courtCue.append(key, auto ? "셔틀 ≈ 모델 추정" : "셔틀 위치 ≈ 추정");
+    }
   }
 }
 
@@ -520,7 +628,7 @@ function seekTo(t) {
 const clock = new FrameClock(el.video, (mediaTime) => render(currentAnalysisTime(mediaTime)));
 
 el.play.addEventListener("click", () => {
-  if (!state.meta) return;
+  if (!state.meta || state.analyzing) return;
   if (el.video.paused || el.video.ended) el.video.play().catch(() => {});
   else el.video.pause();
 });
@@ -566,6 +674,7 @@ for (const input of [el.inVideo, el.inVideoFirst]) {
   });
 }
 el.demo.addEventListener("click", () => loadSample());
+el.cancel.addEventListener("click", () => cancelAnalysis());
 el.sample.addEventListener("click", () => loadSample());
 
 document.addEventListener("keydown", (e) => {
@@ -587,6 +696,7 @@ window.addEventListener("resize", () => {
 });
 window.addEventListener("pagehide", () => {
   clock.stop();
+  analyzer.cancel();
   loader.dispose();
 });
 window.addEventListener("pageshow", (e) => {

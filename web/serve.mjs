@@ -15,6 +15,8 @@ const TYPES = {
   ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png",
   ".mp4": "video/mp4", ".webm": "video/webm", ".txt": "text/plain; charset=utf-8",
+  ".wasm": "application/wasm", ".onnx": "application/octet-stream", ".whl": "application/zip", ".py": "text/plain; charset=utf-8",
+  ".zip": "application/zip", ".data": "application/octet-stream", ".tar": "application/x-tar",
 };
 export const PREFIX = "/shuttle-replay/";
 

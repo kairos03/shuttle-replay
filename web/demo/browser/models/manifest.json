@@ -1,0 +1,35 @@
+{
+  "schema": "shuttle-replay/browser-models/v1",
+  "models": {
+    "tracknet": {
+      "file": "tracknet.onnx",
+      "bytes": 45358149,
+      "sha256": "ed7c4f07e8b214086a0f3f360f766c21464fb98a8c23ca785eaf5f8ef76cdb7c",
+      "input": "input float32 [batch,27,288,512] (median bg + 8 RGB frames, /255)",
+      "output": "heatmap float32 [batch,8,288,512] sigmoid",
+      "source": "TrackNetV3 TrackNet_best.pt (ckpts.zip, sha256 df867641a02712b021f04548ff4b1208ddfdb47f629ab2094ceb978667e83b1a), https://github.com/qaz812345/TrackNetV3 rev 6eda442ada1740573f200f836d93edc9a541ee86",
+      "export": "torch 2.14.1 torch.onnx.export (TorchScript) opset 17 fp32, model weights only (checkpoint optimizer state dropped)",
+      "license": "MIT, Copyright (c) 2024 qaz812345 (covers pretrained checkpoints); see LICENSES.md"
+    },
+    "pose": {
+      "file": "player-pose.onnx",
+      "bytes": 40763500,
+      "sha256": "e773a6880edca1368d84e8e1b4cccc806283bfa5bdc305e654f0b4579310a401",
+      "input": "images float32 [1,3,1280,1280] letterbox pad 114, RGB /255",
+      "output": "output0 float32 [1,56,33600]",
+      "source": "Ultralytics YOLO11s-pose yolo11s-pose.pt (sha256 1060bda4a27012060eca246f9b2adeea22eabb045a1e58f8d229be29b7ebc2ba)",
+      "export": "ultralytics 8.4.190 torch 2.14.1 format=onnx imgsz=1280 opset=17 static batch1 simplify=False fp32",
+      "license": "AGPL-3.0 (Ultralytics); see LICENSES.md"
+    }
+  },
+  "runtime": {
+    "package": "onnxruntime-web",
+    "version": "1.31.1",
+    "license": "MIT, Copyright (c) Microsoft Corporation; see ../runtime/LICENSE",
+    "files": {
+      "ort.webgpu.min.mjs": "329cd956772397a1aedd668e911195d39afefb182f6fc14aafa4f08ac8d8f379",
+      "ort-wasm-simd-threaded.asyncify.mjs": "59cf781530e1a16df2a291d78798e3ec1152467edaec402d6f9599d85047c302",
+      "ort-wasm-simd-threaded.asyncify.wasm": "ca319e9539cd0f1e291cf56074760121eaf39650f5dbf84b6e52c07f4b2944ec"
+    }
+  }
+}

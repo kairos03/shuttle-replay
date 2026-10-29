@@ -11,4 +11,5 @@ out/
 *.pt
 *.pth
 *.onnx
+!web/demo/browser/models/*.onnx
 docs/_build/

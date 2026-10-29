@@ -147,6 +147,11 @@ test("page and app stay local: no external links, fetches or HTML injection", ()
   assert.ok(!/innerHTML|outerHTML|insertAdjacentHTML|document\.write/.test(app));
   const fetches = app.match(/fetch\(([^)]*)\)/g) || [];
   assert.deepEqual(fetches, ['fetch(SAMPLE_DIR + "analysis.json", { cache: "no-cache" })']);
-  assert.ok(!/upload|XMLHttpRequest|sendBeacon|WebSocket/.test(app));
-  assert.ok(!/자동 분석/.test(html + app));
+  assert.ok(!/XMLHttpRequest|sendBeacon|WebSocket|EventSource/.test(app));
+  // Automatic analysis is browser-local: the page, its worker owner and the decoder never
+  // name a remote origin or a network sink, and the worker fetches nothing itself.
+  for (const f of ["analyzer.mjs", "analyzer-worker.mjs", "video.mjs"]) {
+    const src = readFileSync(new URL(`../demo/browser/${f}`, import.meta.url), "utf8");
+    assert.ok(!/https?:\/\/|XMLHttpRequest|sendBeacon|WebSocket|EventSource|fetch\(|innerHTML/.test(src), f);
+  }
 });

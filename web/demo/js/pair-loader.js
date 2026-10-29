@@ -53,6 +53,16 @@ export class PairLoader {
     }
   }
 
+  /**
+   * Attach a validated analysis to the active pair, only while `gen` is still the newest
+   * request (a later selection or reset makes a late result a no-op). Returns the pair or null.
+   */
+  attachModel(gen, model) {
+    if (gen !== this.generation || !this.active) return null;
+    this.active = { ...this.active, model };
+    return this.active;
+  }
+
   /** Supersede any in-flight request; the active pair is kept. Returns the new generation. */
   cancel() {
     return ++this.generation;

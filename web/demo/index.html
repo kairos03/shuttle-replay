@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>shuttle-replay</title>
 <meta name="description" content="배드민턴 영상 리플레이 데모입니다.">
 <link rel="stylesheet" href="styles.css">
@@ -24,7 +24,7 @@
 </header>
 
 <main class="workspace">
-  <section id="stage" class="stage" aria-label="리플레이 화면">
+  <section id="stage" class="stage" aria-label="리플레이 화면" aria-busy="false">
     <figure class="panel panel-source">
       <div class="video-box" id="video-box">
         <video id="video" playsinline muted preload="auto"></video>
@@ -47,6 +47,15 @@
       <figcaption id="court-cue"></figcaption>
       <div class="court-box"><canvas id="cv-court" role="img" aria-label="코트 평면도"></canvas></div>
     </figure>
+    <div class="analyzing" id="analyzing" hidden>
+      <div class="analyzing-card" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <p id="analyzing-label">자동 분석 중</p>
+        <progress id="analyzing-progress" max="100" value="0" aria-label="분석 진행률"></progress>
+        <p class="analyzing-note">영상은 이 브라우저에서만 처리됩니다.</p>
+        <button type="button" id="btn-cancel">분석 취소</button>
+      </div>
+    </div>
   </section>
 </main>
 </body>

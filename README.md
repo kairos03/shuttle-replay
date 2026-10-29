@@ -49,7 +49,7 @@ PyAV wheels include FFmpeg, so no system FFmpeg is required.
 
 ## Why use it
 
-- **Fully offline.** No detector, no model weights, no network calls.
+- **Fully offline CLI.** The Python CLI has no detector, no model weights and makes no network calls (the browser demo separately downloads its self-hosted ONNX models).
 - **Human review first.** Contacts, landing regions and calibration points come from you; nothing is silently repaired.
 - **Honest layers.** Observed pixels, your review and the conditional model are kept apart in the output.
 - **Safe rendering.** Source audio is stream-copied without re-encoding, and existing files are never overwritten.
@@ -74,7 +74,7 @@ Writes `demo/inputs/` (synthetic video, tracks, review, calibration input),
 An interactive viewer (Korean UI) is published with the docs at
 <https://kairos03.github.io/shuttle-replay/demo/>. Choose **샘플 보기** to replay a real
 badminton clip with precomputed player and shuttle overlays, or **영상 업로드** to play
-your own video locally. Selected videos are not uploaded and are not automatically analyzed.
+your own video locally. Selected videos are not uploaded; they are analyzed automatically inside your browser (desktop Chrome with WebGPU required) and the result autoplays.
 The sample's court positions are reference estimates, not measured 3D ground truth.
 To serve it locally (with HTTP Range support for seeking):
 
@@ -194,7 +194,7 @@ rounded to 5 km/h). Treat them as rough model values.
 <summary><b>Limits</b></summary>
 
 - No shuttle or player detection. You supply detections in the
-  [tracks format](docs/schemas.md); no model weights are downloaded.
+  [tracks format](docs/schemas.md); the Python CLI downloads no model weights (the browser demo loads its own self-hosted ONNX models).
 - No automatic contact finding or contact timestamp refinement.
 - No learned dense-depth maps, no learned shot labels, no automatic IN/OUT calls.
 - 3D output is conditional, not measured. Low reprojection error shows

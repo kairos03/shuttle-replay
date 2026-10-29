@@ -51,6 +51,17 @@
 .court-box { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; }
 #cv-court { display: block; height: min(440px, 70vh); width: auto; max-width: 100%; aspect-ratio: 7.3 / 15.2; }
 
+/* automatic analysis: one restrained overlay over both the video and the court */
+.stage { position: relative; }
+.analyzing { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; background: oklch(15% 0.01 170 / 0.62); border-radius: var(--radius-card); }
+.analyzing[hidden] { display: none; }
+.analyzing-card { display: flex; flex-direction: column; align-items: center; gap: var(--space-xs); padding: var(--space-md) var(--space-lg); background: var(--color-scrim); color: var(--color-stage-ink); border-radius: var(--radius-card); font-size: var(--text-sm); min-width: 14em; }
+.analyzing-card p { margin: 0; font-weight: 600; }
+.analyzing-card progress { width: 100%; accent-color: var(--color-accent); }
+.analyzing-card .analyzing-note { font-weight: 400; color: var(--color-stage-muted); font-size: var(--text-xs); }
+.spinner { width: 22px; height: 22px; border: 3px solid oklch(95% 0.012 120 / 0.25); border-top-color: var(--color-stage-ink); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* transport, joined to the stage */
 .transport { display: flex; align-items: center; gap: var(--space-sm); background: var(--color-paper-2); border: var(--rule-hair) solid var(--color-rule); border-top: 0; border-radius: 0 0 var(--radius-card) var(--radius-card); padding: var(--space-xs) var(--space-sm); }
 #rng-time { flex: 1; min-width: 0; accent-color: var(--color-accent); min-height: 24px; margin: 0; }
@@ -82,4 +93,5 @@ button.primary:hover:not(:disabled), .pick:hover { background: var(--color-accen
 }
 @media (prefers-reduced-motion: reduce) {
   button, .pick { transition: none; }
+  .spinner { animation: none; border-top-color: oklch(95% 0.012 120 / 0.25); }
 }

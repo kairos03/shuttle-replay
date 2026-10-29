@@ -24,10 +24,12 @@ const SHUTTLE_MAP_REF_STATUS = new Set(["estimated", "interpolated", "reference"
 const SAME_XY_M = 1e-6;
 const SAME_PTS_S = 1e-6;
 
-import { PLAYER_IDS, PLAYER_SHORT } from "./players.js";
+import { PLAYER_IDS, PLAYER_SHORT, SINGLES_PLAYER_IDS } from "./players.js";
 
-const PLAYER_ID_SET = new Set(PLAYER_IDS);
-const CALIBRATION_STATUS = new Set(["manual_reference", "unavailable"]);
+const PLAYER_ID_SET = new Set([...PLAYER_IDS, ...SINGLES_PLAYER_IDS]);
+// automatic_reference: court lines found automatically in the video; labelled as such, never as manual.
+const CALIBRATION_STATUS = new Set(["manual_reference", "automatic_reference", "unavailable"]);
+const PROJECTING_STATUS = new Set(["manual_reference", "automatic_reference"]);
 
 const LAYERS = new Set(["excluded_camera_cut", "conditional_model", "observed_pixel", "none"]);
 
@@ -86,7 +88,7 @@ const unit = (v) => finite(v) && v >= 0 && v <= 1;
 
 /**
  * Optional top-level player_calibration. Projection (use of per-frame court_xy_m) is
- * permitted only for a manual_reference with a finite, non-degenerate 3x3 homography and
+ * permitted only for a manual or automatic reference with a finite, non-degenerate 3x3 homography and
  * at least four anchors. Absent or unavailable => no floor positions are kept.
  */
 function parsePlayerCalibration(c) {
@@ -116,7 +118,7 @@ function parsePlayerCalibration(c) {
       h[0][1] * (h[1][0] * h[2][2] - h[1][2] * h[2][0]) +
       h[0][2] * (h[1][0] * h[2][1] - h[1][1] * h[2][0])
     : 0;
-  const permitsProjection = c.status === "manual_reference" && h !== null && Math.abs(det) > 1e-12 && anchors.length >= 4;
+  const permitsProjection = PROJECTING_STATUS.has(c.status) && h !== null && Math.abs(det) > 1e-12 && anchors.length >= 4;
   return Object.freeze({
     status: c.status,
     h,
@@ -257,7 +259,7 @@ function parsePlayers(raw, where, { excluded, permitsProjection }) {
       short: PLAYER_SHORT[p.id],
       box,
       anchor,
-      // Floor position only under a validated manual reference; never derived here.
+      // Floor position only under a validated manual/automatic reference; never derived here.
       courtXy: permitsProjection ? courtXy : null,
       keypoints,
       score: finite(p.score) ? p.score : null,

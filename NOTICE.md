@@ -20,6 +20,16 @@ Installed from PyPI by `uv`; each keeps its own license:
   depending on build, including libx264 under GPL-2.0-or-later). See the PyAV
   project for the exact bundled licenses.
 
+## Vendored browser demo runtime
+
+- **mp4box.js 2.5.0** (`web/demo/browser/vendor/mp4box/`), ESM dist files from the
+  npm package `mp4box@2.5.0` (https://github.com/gpac/mp4box.js), sourcemap comments
+  removed; BSD-3-Clause, copy in `web/demo/browser/vendor/mp4box/LICENSE`. Used only
+  to demux a user-selected MP4/MOV locally in the browser.
+- Model weights and the onnxruntime-web / Pyodide runtimes under
+  `web/demo/browser/models/`, `runtime/` and `py/runtime/` are documented by their
+  `models/LICENSES.md`, `models/manifest.json`, `runtime/LICENSE` and `py/runtime/LICENSE`.
+
 ## Vendored documentation assets
 
 - **MathJax 3.2.2** (`docs/_static/mathjax/tex-svg.js`), from the official npm

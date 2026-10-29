@@ -27,9 +27,11 @@ test("shared docs content includes a locale-safe demo entry before language choi
   }
 });
 
-test("README demo guidance describes the current empty-first, video-only picker", () => {
+test("README demo guidance describes empty-first, browser-local automatic analysis", () => {
   assert.ok(!read("README.md").includes("It opens a synthetic sample"));
   assert.ok(!read("README.ko.md").includes("로컬 영상과 그 `analysis.json`"));
-  assert.ok(read("README.md").includes("not automatically analyzed"));
-  assert.ok(read("README.ko.md").includes("자동 분석하지 않습니다"));
+  assert.ok(!read("README.md").includes("not automatically analyzed"));
+  assert.ok(read("README.md").includes("analyzed automatically inside your browser"));
+  assert.ok(read("README.ko.md").includes("브라우저 안에서 자동 분석합니다"));
+  assert.ok(read("web/README.md").includes("Nothing is uploaded and no\nserver inference is used."));
 });
