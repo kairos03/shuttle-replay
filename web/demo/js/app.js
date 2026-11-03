@@ -9,7 +9,7 @@ import { COURT } from "../assets/court-data.js";
 import { FrameClock } from "./frame-clock.js";
 import { containTransform, mapTrailRuns } from "./view-geometry.js";
 import { PairLoader } from "./pair-loader.js";
-import { plainCopy } from "./presentation.js";
+import { courtEmptyReason, plainCopy } from "./presentation.js";
 import { ANKLES, PLAYER_COLORS, courtMarkerVisible, fitLabel, playerTrail, playersMapAvailable } from "./players.js";
 import { BrowserAnalyzer } from "../browser/analyzer.mjs";
 import { SHUTTLE_MAP_COLOR, shuttleEdgeArrow, shuttleLabelBox, shuttleRefLabel, shuttleRefTrail } from "./shuttle-map.js";
@@ -250,6 +250,8 @@ function showCourtCue(m) {
   el.courtCue.dataset.kind = m ? "analysis" : "none";
   if (!m) {
     el.courtCue.textContent = state.analyzing ? "분석 중" : "분석 결과 없음";
+  } else if (courtEmptyReason(m)) {
+    el.courtCue.textContent = courtEmptyReason(m); // nothing maps onto the court: say why
   } else {
     // Automatic results: player floor cue and the conditional shuttle cue, side by side.
     const auto = m.playerCalibration.status === "automatic_reference";

@@ -13,6 +13,7 @@ import {
 import { GPU_REQUIRED_MESSAGE, makeProgress, requireGpu, requireGpuSessions } from "../demo/browser/analyzer-worker.mjs";
 import { BrowserAnalyzer } from "../demo/browser/analyzer.mjs";
 import { REAL_JSON, boot, pick, waitFor } from "./app-harness.mjs";
+import { fixture } from "./helpers.mjs";
 
 test("pts follow presentation order with the edit-list offset (B-frames, as <video> plays)", () => {
   // Real sample layout: elst media_time 2002 at timescale 30000, ctts reorder.
@@ -199,4 +200,14 @@ test("GPU refusal shows the whole message and keeps the picked video playable", 
   assert.equal(e["btn-play"].disabled, false);
   assert.match(e.video.getAttribute("src"), /^blob:/);
   assert.equal(e.stage.dataset.analysis, undefined);
+});
+
+test("automatic result with nothing to map says why the court plan is empty", async () => {
+  const env = await boot();
+  const e = env.els;
+  pick(e["in-video-first"], { name: "rally.mp4" });
+  await waitFor(() => env.workers.length === 1);
+  env.workers[0].emit({ type: "done", doc: fixture() });
+  await waitFor(() => e["source-state"].text === "자동 분석 결과");
+  assert.equal(e["court-cue"].text, "코트 선 인식 실패 — 코트 위 표시 없음");
 });
