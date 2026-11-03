@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { frameState, parseAnalysisText } from "../demo/js/analysis-model.js";
-import { modelAvailable, outsideVideoReadout, plainCopy, primaryReadout, scopeStatement } from "../demo/js/presentation.js";
+import { formatClock, modelAvailable, outsideVideoReadout, plainCopy, primaryReadout, scopeStatement } from "../demo/js/presentation.js";
 import { fixture, clone } from "./helpers.mjs";
 
 const realText = readFileSync(new URL("../demo/assets/real/analysis.json", import.meta.url), "utf8");
@@ -59,4 +59,13 @@ test("visible frame-state labels lose every middle dot", () => {
   const label = plainCopy(frameState(gap, 0).label);
   assert.equal(label.includes("·"), false);
   assert.equal(label, "검출 없음, 모델 없음");
+});
+
+test("playback clock text is m:ss.ss and never negative", () => {
+  assert.equal(formatClock(0), "0:00.00");
+  assert.equal(formatClock(6.973633), "0:06.97");
+  assert.equal(formatClock(59.996), "1:00.00");
+  assert.equal(formatClock(75.5), "1:15.50");
+  assert.equal(formatClock(-1), "0:00.00");
+  assert.equal(formatClock(NaN), "0:00.00");
 });

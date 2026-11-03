@@ -5,6 +5,14 @@
 /** Visible copy never shows a middle dot; joins become commas. */
 export const plainCopy = (s) => String(s).replace(/\s*·\s*/g, ", ");
 
+/** Playback clock text, m:ss.ss (e.g. "0:03.47"); "0:00.00" for a missing or negative time. */
+export function formatClock(t) {
+  const cs = Number.isFinite(t) && t > 0 ? Math.round(t * 100) : 0;
+  const m = Math.floor(cs / 6000);
+  const s = ((cs % 6000) / 100).toFixed(2).padStart(5, "0");
+  return `${m}:${s}`;
+}
+
 /**
  * True when the loaded model has at least one frame the renderer would draw as a model
  * point (same test as trailIndices/hasPoint "model": modelPx and modelFlightId set).
