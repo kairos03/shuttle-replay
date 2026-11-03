@@ -5,6 +5,47 @@
 /** Visible copy never shows a middle dot; joins become commas. */
 export const plainCopy = (s) => String(s).replace(/\s*·\s*/g, ", ");
 
+/** Playback clock text, m:ss.ss (e.g. "0:03.47"); "0:00.00" for a missing or negative time. */
+export function formatClock(t) {
+  const cs = Number.isFinite(t) && t > 0 ? Math.round(t * 100) : 0;
+  const m = Math.floor(cs / 6000);
+  const s = ((cs % 6000) / 100).toFixed(2).padStart(5, "0");
+  return `${m}:${s}`;
+}
+
+/** Shortest repeat span: shorter ones would seek back on every frame and look frozen. */
+export const MIN_LOOP_S = 0.1;
+
+/**
+ * A-B repeat, one button: off (null) -> start marked {a} -> repeating {a, b} -> off.
+ * The end mark may come before the start; the pair is kept in time order. An end mark
+ * closer than MIN_LOOP_S to the start changes nothing.
+ */
+export function nextLoop(loop, t) {
+  if (!loop) return { a: t, b: null };
+  if (loop.b !== null) return null;
+  if (Math.abs(t - loop.a) < MIN_LOOP_S) return loop;
+  return t > loop.a ? { a: loop.a, b: t } : { a: t, b: loop.a };
+}
+
+/** Where playback jumps back to once it reaches the end mark, or null to keep playing. */
+export function loopWrapTarget(loop, t) {
+  return loop && loop.b !== null && t >= loop.b ? loop.a : null;
+}
+
+/** Repeat button text for each state. */
+export function loopButtonText(loop) {
+  if (!loop) return "구간 반복";
+  return loop.b === null ? "끝 지점 찍기" : "반복 해제";
+}
+
+/** Accessible name: the visible text plus the marked times, which the bar alone cannot say. */
+export function loopLabel(loop) {
+  if (!loop) return "구간 반복: 지금 위치를 시작 지점으로 찍기";
+  if (loop.b === null) return `구간 반복: 시작 ${formatClock(loop.a)}, 지금 위치를 끝 지점으로 찍기`;
+  return `구간 반복 중 ${formatClock(loop.a)}부터 ${formatClock(loop.b)}까지, 누르면 해제`;
+}
+
 /**
  * True when the loaded model has at least one frame the renderer would draw as a model
  * point (same test as trailIndices/hasPoint "model": modelPx and modelFlightId set).

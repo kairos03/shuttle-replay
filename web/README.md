@@ -9,6 +9,9 @@ https://kairos03.github.io/shuttle-replay/demo/ by the Docs workflow.
 The first visit is empty. Choose **영상 업로드** or **샘플 보기** inside the
 left video area. No sample video or analysis is requested before that choice.
 Playback controls stay disabled until a video is ready. The sample does not autoplay.
+The transport shows current / total time and a 0.25× / 0.5× / 1× speed choice; Space plays or
+pauses, and ← / → (or , / .) pause and step one frame along the analysis `pts_s`, also with the
+play button or timeline focused (no stepping without analysis frames).
 
 A selected video plays using a browser-local blob URL and is analyzed
 automatically **inside this browser**: MP4/MOV demux (mp4box.js) and WebCodecs

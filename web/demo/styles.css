@@ -64,7 +64,15 @@
 
 /* transport, joined to the stage */
 .transport { display: flex; align-items: center; gap: var(--space-sm); background: var(--color-paper-2); border: var(--rule-hair) solid var(--color-rule); border-top: 0; border-radius: 0 0 var(--radius-card) var(--radius-card); padding: var(--space-xs) var(--space-sm); }
+.timeline { position: relative; flex: 1; min-width: 0; display: flex; }
 #rng-time { flex: 1; min-width: 0; accent-color: var(--color-accent); min-height: 24px; margin: 0; }
+.transport-extra { display: flex; align-items: center; gap: var(--space-sm); }
+/* marked repeat span, a thin bar under the slider track */
+.loop-band { position: absolute; bottom: 0; height: 3px; border-radius: 2px; background: var(--color-accent-deep); pointer-events: none; }
+.loop-band[hidden] { display: none; }
+#btn-loop[data-state="repeat"] { border-color: var(--color-accent-deep); color: var(--color-accent-deep); font-weight: 600; }
+.time-readout { font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--color-ink-2); white-space: nowrap; }
+#sel-speed { font-size: var(--text-sm); color: var(--color-ink); background: var(--color-paper); border: var(--rule-hair) solid var(--color-muted); border-radius: var(--radius-control); min-height: var(--control-h); padding: 0 var(--space-2xs); cursor: pointer; }
 
 button, .pick {
   display: inline-flex; align-items: center; font-size: var(--text-sm); color: var(--color-ink); background: var(--color-paper);
@@ -73,9 +81,9 @@ button, .pick {
   transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
 }
 button[hidden] { display: none; }
-button:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
+button:disabled, input:disabled, select:disabled { opacity: 0.5; cursor: not-allowed; }
 button:hover:not(:disabled), .pick:hover { border-color: var(--color-ink-2); background: var(--light); }
-button:focus-visible, input:focus-visible, .pick:focus-within { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, select:focus-visible, .pick:focus-within { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 button.primary, .pick { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-accent-ink); font-weight: 600; }
 button.primary { min-width: 6em; justify-content: center; }
 button.primary:hover:not(:disabled), .pick:hover { background: var(--color-accent-deep); border-color: var(--color-accent-deep); }
@@ -90,6 +98,10 @@ button.primary:hover:not(:disabled), .pick:hover { background: var(--color-accen
 @media (max-width: 30rem) {
   .masthead, .workspace { padding-inline: var(--space-xs); }
   .source { justify-content: flex-start; }
+  /* timeline on its own full-width row; play and time below, then repeat and speed */
+  .transport { flex-wrap: wrap; }
+  .timeline { flex-basis: 100%; order: -1; }
+  .time-readout { margin-inline-end: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   button, .pick { transition: none; }
