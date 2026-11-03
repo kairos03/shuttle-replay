@@ -9,7 +9,7 @@ import { COURT } from "../assets/court-data.js";
 import { FrameClock } from "./frame-clock.js";
 import { containTransform, mapTrailRuns } from "./view-geometry.js";
 import { PairLoader } from "./pair-loader.js";
-import { formatClock, plainCopy } from "./presentation.js";
+import { formatClock, loopButtonText, loopLabel, loopWrapTarget, nextLoop, plainCopy } from "./presentation.js";
 import { ANKLES, PLAYER_COLORS, courtMarkerVisible, fitLabel, playerTrail, playersMapAvailable } from "./players.js";
 import { BrowserAnalyzer } from "../browser/analyzer.mjs";
 import { SHUTTLE_MAP_COLOR, shuttleEdgeArrow, shuttleLabelBox, shuttleRefLabel, shuttleRefTrail } from "./shuttle-map.js";
@@ -18,6 +18,7 @@ const SAMPLE_DIR = "assets/real/";
 const OFFSET = 0; // analysis time = video time; the bundled pair starts at PTS 0
 const COLORS = { observed: "#2fe36b", model: "#ff8a1f", line: "#e9efe9", net: "#ffffff" };
 const PROBE_TIMEOUT_MS = 15000;
+const THUMB_INSET_PX = 8; // half of Chrome's default range thumb, so the repeat band lines up with it
 const NO_ANALYSIS = "선택한 영상, 분석 결과 없음";
 const AUTO_DONE = "자동 분석 결과";
 const STAGE_LABELS = {
@@ -35,10 +36,10 @@ const el = {
   sample: $("btn-sample"), chooser: $("chooser"), sourceActions: $("source-actions"),
   sourceMsg: $("source-msg"), sourceState: $("source-state"), sourceName: $("source-name"), courtCue: $("court-cue"),
   stage: $("stage"), analyzing: $("analyzing"), analyzingLabel: $("analyzing-label"), analyzingProgress: $("analyzing-progress"),
-  cancel: $("btn-cancel"), timeReadout: $("time-readout"), speed: $("sel-speed"),
+  cancel: $("btn-cancel"), timeReadout: $("time-readout"), speed: $("sel-speed"), loop: $("btn-loop"), loopBand: $("loop-band"),
 };
 
-const state = { model: null, meta: null, videoError: null, analyzing: false };
+const state = { model: null, meta: null, videoError: null, analyzing: false, loop: null };
 
 // ---------- loading ----------
 
@@ -191,7 +192,7 @@ function setAnalyzing(on) {
     el.analyzingProgress.value = 0;
   }
   if (!el.chooser.hidden) return;
-  el.play.disabled = el.range.disabled = el.speed.disabled = on;
+  el.play.disabled = el.range.disabled = el.speed.disabled = el.loop.disabled = on;
 }
 
 function finishApply(result) {
@@ -218,6 +219,7 @@ function activate(pair) {
   if (pair.owned) setSourceMsg(pair.model ? AUTO_DONE : NO_ANALYSIS, pair.label);
   else setSourceMsg("");
   showCourtCue(pair.model);
+  setLoop(null);
   setRange();
   layoutCanvases();
   render(toAnalysisTime(0, OFFSET));
@@ -227,7 +229,7 @@ function activate(pair) {
 function setChosen(on) {
   el.chooser.hidden = on;
   el.sourceActions.hidden = !on;
-  el.play.disabled = el.range.disabled = el.speed.disabled = !on || state.analyzing;
+  el.play.disabled = el.range.disabled = el.speed.disabled = el.loop.disabled = !on || state.analyzing;
 }
 
 /** Back to the empty first screen (bfcache restore after dispose): nothing is loaded. */
@@ -238,6 +240,7 @@ function showEmpty() {
   el.video.removeAttribute("src");
   el.video.load();
   el.courtCue.replaceChildren();
+  setLoop(null);
   setSourceMsg("");
   setChosen(false);
   layoutCanvases();
@@ -638,7 +641,11 @@ function seekTo(t) {
   render(currentAnalysisTime(el.video.currentTime));
 }
 
-const clock = new FrameClock(el.video, (mediaTime) => render(currentAnalysisTime(mediaTime)));
+const clock = new FrameClock(el.video, (mediaTime) => {
+  const back = loopWrapTarget(state.loop, currentAnalysisTime(mediaTime));
+  if (back !== null && !el.video.paused) seekTo(back); // reached the end mark: repeat
+  else render(currentAnalysisTime(mediaTime));
+});
 
 el.play.addEventListener("click", () => {
   if (!state.meta || state.analyzing) return;
@@ -648,6 +655,12 @@ el.play.addEventListener("click", () => {
 el.video.addEventListener("play", () => {
   el.play.textContent = "일시정지";
   clock.start();
+});
+// An end mark at the very end of the clip is reached as "ended" rather than on a frame tick.
+el.video.addEventListener("ended", () => {
+  if (!state.loop || state.loop.b === null) return;
+  seekTo(state.loop.a);
+  el.video.play().catch(() => {});
 });
 for (const ev of ["pause", "ended"]) {
   el.video.addEventListener(ev, () => {
@@ -683,6 +696,27 @@ el.speed.addEventListener("change", () => {
   el.video.defaultPlaybackRate = el.video.playbackRate = rate;
 });
 
+/** Repeat state, button and the marked span under the timeline. */
+function setLoop(loop) {
+  state.loop = loop;
+  el.loop.textContent = loopButtonText(loop);
+  el.loop.setAttribute("aria-label", loopLabel(loop));
+  el.loop.dataset.state = !loop ? "off" : loop.b === null ? "start" : "repeat";
+  const lo = Number(el.range.min);
+  const span = Number(el.range.max) - lo;
+  el.loopBand.hidden = !loop || !(span > 0);
+  if (el.loopBand.hidden) return;
+  // The thumb centre travels the track inset by half a thumb on each side.
+  const frac = (t) => Math.min(Math.max((t - lo) / span, 0), 1).toFixed(5);
+  const track = `(100% - ${2 * THUMB_INSET_PX}px)`;
+  el.loopBand.style.left = `calc(${THUMB_INSET_PX}px + ${track} * ${frac(loop.a)})`;
+  el.loopBand.style.width = loop.b === null ? "2px" : `calc(${track} * ${(frac(loop.b) - frac(loop.a)).toFixed(5)})`;
+}
+el.loop.addEventListener("click", () => {
+  if (!state.meta || state.analyzing) return;
+  setLoop(nextLoop(state.loop, currentAnalysisTime()));
+});
+
 /** One analysis frame back or forward (paused). Without analysis frames there is nothing to step. */
 function stepFrame(dir) {
   const m = state.model;
@@ -711,6 +745,12 @@ el.sample.addEventListener("click", () => loadSample());
 document.addEventListener("keydown", (e) => {
   const tag = e.target && e.target.tagName;
   if (e.altKey || e.ctrlKey || e.metaKey || tag === "SELECT" || tag === "TEXTAREA") return;
+  // L by physical key, so it also works with a Korean layout ("ㅣ"); the slider takes it too.
+  if (e.code === "KeyL" && (tag !== "INPUT" || e.target === el.range)) {
+    e.preventDefault();
+    el.loop.click();
+    return;
+  }
   // The focused timeline steps frames when there are analysis frames; other inputs keep their keys.
   const frameKeysOnRange = e.target === el.range && state.model;
   if (tag === "INPUT" && !frameKeysOnRange) return;

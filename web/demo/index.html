@@ -40,15 +40,21 @@
     </figure>
     <section class="transport" aria-label="재생 제어">
       <button type="button" id="btn-play" class="primary" aria-keyshortcuts="Space" disabled>재생</button>
-      <label for="rng-time" class="sr-only">타임라인</label>
-      <input type="range" id="rng-time" min="0" max="1" step="0.001" value="0" aria-keyshortcuts="ArrowLeft ArrowRight" disabled>
+      <div class="timeline">
+        <label for="rng-time" class="sr-only">타임라인</label>
+        <input type="range" id="rng-time" min="0" max="1" step="0.001" value="0" aria-keyshortcuts="ArrowLeft ArrowRight" disabled>
+        <span class="loop-band" id="loop-band" aria-hidden="true" hidden></span>
+      </div>
       <output id="time-readout" class="time-readout" aria-hidden="true">0:00.00 / 0:00.00</output>
-      <label for="sel-speed" class="sr-only">재생 속도</label>
-      <select id="sel-speed" autocomplete="off" disabled>
-        <option value="0.25">0.25×</option>
-        <option value="0.5">0.5×</option>
-        <option value="1" selected>1×</option>
-      </select>
+      <span class="transport-extra">
+        <button type="button" id="btn-loop" aria-keyshortcuts="L" disabled>구간 반복</button>
+        <label for="sel-speed" class="sr-only">재생 속도</label>
+        <select id="sel-speed" autocomplete="off" disabled>
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+        </select>
+      </span>
     </section>
     <figure class="panel panel-court">
       <figcaption id="court-cue"></figcaption>
