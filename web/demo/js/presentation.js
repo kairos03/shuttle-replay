@@ -2,6 +2,8 @@
 // Presentation-only helpers: visible copy and control availability derived from the
 // validated model. They never change analysis facts.
 
+import { playersMapAvailable } from "./players.js";
+
 /** Visible copy never shows a middle dot; joins become commas. */
 export const plainCopy = (s) => String(s).replace(/\s*·\s*/g, ", ");
 
@@ -13,6 +15,17 @@ export const plainCopy = (s) => String(s).replace(/\s*·\s*/g, ", ");
 export function modelAvailable(model) {
   if (!model || !Array.isArray(model.frames)) return false;
   return model.frames.some((fr) => fr.modelPx !== null && fr.modelFlightId !== null);
+}
+
+/**
+ * Why the court plan stays empty for a loaded analysis, or null when it can draw players
+ * or the shuttle reference. Without a projecting calibration nothing maps onto the court.
+ */
+export function courtEmptyReason(model) {
+  if (!model || model.hasShuttleMapRef || playersMapAvailable(model)) return null;
+  return model.playerCalibration.permitsProjection
+    ? "선수 바닥 위치 없음 — 코트 위 표시 없음"
+    : "코트 선 인식 실패 — 코트 위 표시 없음";
 }
 
 /** One scope sentence for the court caption, from what the loaded data can draw. */

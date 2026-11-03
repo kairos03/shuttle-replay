@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { frameState, parseAnalysisText } from "../demo/js/analysis-model.js";
-import { modelAvailable, outsideVideoReadout, plainCopy, primaryReadout, scopeStatement } from "../demo/js/presentation.js";
+import { courtEmptyReason, modelAvailable, outsideVideoReadout, plainCopy, primaryReadout, scopeStatement } from "../demo/js/presentation.js";
 import { fixture, clone } from "./helpers.mjs";
 
 const realText = readFileSync(new URL("../demo/assets/real/analysis.json", import.meta.url), "utf8");
@@ -59,4 +59,13 @@ test("visible frame-state labels lose every middle dot", () => {
   const label = plainCopy(frameState(gap, 0).label);
   assert.equal(label.includes("·"), false);
   assert.equal(label, "검출 없음, 모델 없음");
+});
+
+test("empty court plan says why: no court lines, or court found but no player floor positions", () => {
+  assert.equal(courtEmptyReason(null), null);
+  assert.equal(courtEmptyReason(real), null); // the bundled pair draws players and the shuttle reference
+  assert.equal(courtEmptyReason(modelled), "코트 선 인식 실패 — 코트 위 표시 없음");
+  const fx = clone(fixture());
+  fx.player_calibration = { ...JSON.parse(realText).player_calibration, status: "automatic_reference" };
+  assert.equal(courtEmptyReason(parseAnalysisText(JSON.stringify(fx))), "선수 바닥 위치 없음 — 코트 위 표시 없음");
 });
