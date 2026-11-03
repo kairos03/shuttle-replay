@@ -41,13 +41,13 @@ class Video extends El {
     if (this.onloadedmetadata) this.env.probe(this, u); // probe element only
   }
   pause() { this.paused = true; }
-  load() {}
+  load() { this.playbackRate = this.defaultPlaybackRate ?? 1; } // as in browsers
   play() { this.played++; this.paused = false; return Promise.resolve(); }
 }
 
 const IDS = ["video", "cv-overlay", "cv-court", "video-msg", "rng-time", "btn-play", "in-video", "in-video-first", "btn-demo",
   "btn-sample", "chooser", "source-actions", "source-msg", "source-state", "source-name", "court-cue",
-  "stage", "analyzing", "analyzing-label", "analyzing-progress", "btn-cancel"];
+  "stage", "analyzing", "analyzing-label", "analyzing-progress", "btn-cancel", "time-readout", "sel-speed"];
 let n = 0;
 
 class FakeWorker {
@@ -128,4 +128,6 @@ export async function waitFor(predicate) {
   }
 }
 export const pick = (input, file) => { input.files = file ? [file] : []; input.dispatch("change"); };
-export const space = (env) => (env.docListeners.keydown || []).forEach((f) => f({ key: " ", target: { tagName: "BODY" }, preventDefault() {} }));
+export const key = (env, k, target = { tagName: "BODY" }) =>
+  (env.docListeners.keydown || []).forEach((f) => f({ key: k, target, preventDefault() {} }));
+export const space = (env) => key(env, " ");
