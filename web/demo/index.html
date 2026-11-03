@@ -46,6 +46,12 @@
     <figure class="panel panel-court">
       <figcaption id="court-cue"></figcaption>
       <div class="court-box"><canvas id="cv-court" role="img" aria-label="코트 평면도"></canvas></div>
+      <details class="names" id="names" hidden>
+        <summary>선수 이름</summary>
+        <div class="names-fields" id="names-fields"></div>
+        <button type="button" id="btn-swap-sides" class="names-swap">앞뒤 바꾸기</button>
+        <p class="names-note">이름은 분석이 추적한 선수를 따라가고, 영상 전체에 한 번에 적용됩니다. 선수가 겹치거나 가려지면 다른 사람에게 옮겨 갈 수 있고, 네트 건너편으로 가는 것은 따라가지 못합니다. 코트 체인지 이후 구간을 볼 때는 앞뒤 바꾸기를 누르세요. 같은 편 두 사람의 이름이 서로 바뀌어 보이면 직접 고쳐 주세요. 이름은 이 화면에만 쓰이고 저장되지 않습니다.</p>
+      </details>
     </figure>
     <div class="analyzing" id="analyzing" hidden>
       <div class="analyzing-card" role="status" aria-live="polite">
