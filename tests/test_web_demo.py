@@ -22,8 +22,15 @@ def _load_module(path, name):
     return mod
 
 
+# Solver bookkeeping, not results: the evaluation count depends on the BLAS/LAPACK build
+# (e.g. OpenBLAS on Linux vs Accelerate on macOS) even when the fitted values agree.
+SOLVER_COUNTS = {"nfev"}
+
+
 def _close(a, b, path="$"):
-    if isinstance(a, float) or isinstance(b, float):
+    if path.rsplit(".", 1)[-1] in SOLVER_COUNTS:
+        assert isinstance(a, int) and isinstance(b, int) and a > 0 and b > 0, path
+    elif isinstance(a, float) or isinstance(b, float):
         assert math.isclose(a, b, rel_tol=1e-6, abs_tol=1e-6), path
     elif isinstance(a, dict):
         assert a.keys() == b.keys(), path
