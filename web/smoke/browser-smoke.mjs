@@ -119,8 +119,12 @@ try {
     assert.equal((await text("#court-cue")).includes("분석 결과 없음"), false);
   });
   await check("picked video plays without bundled analysis", async () => {
+    // A pick starts the in-browser analysis (covered by browser-analysis-e2e.mjs);
+    // cancelling it is the quick way to a picked video with no analysis attached.
     await page.setInputFiles("#in-video", clip);
-    await waitText("#source-state", /선택한 영상, 분석 결과 없음/);
+    await page.waitForSelector("#analyzing:not([hidden])", { timeout: 8000 });
+    await page.click("#btn-cancel");
+    await waitText("#source-state", /분석을 취소했습니다/);
     assert.equal(await text("#source-name"), clip.name); // textContent, not markup
     assert.equal(await page.locator("#source-name b").count(), 0);
     assert.match(await page.evaluate(() => document.getElementById("video").src), /^blob:/);
