@@ -47,7 +47,7 @@ class Video extends El {
 
 const IDS = ["video", "cv-overlay", "cv-court", "video-msg", "rng-time", "btn-play", "in-video", "in-video-first", "btn-demo",
   "btn-sample", "chooser", "source-actions", "source-msg", "source-state", "source-name", "court-cue",
-  "stage", "analyzing", "analyzing-label", "analyzing-progress", "btn-cancel"];
+  "stage", "analyzing", "analyzing-label", "analyzing-progress", "btn-cancel", "chooser-req"];
 let n = 0;
 
 class FakeWorker {

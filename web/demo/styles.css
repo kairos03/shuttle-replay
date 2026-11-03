@@ -46,6 +46,9 @@
 .overlay { pointer-events: none; }
 .chooser { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--space-sm); }
 .chooser[hidden], .source-actions[hidden] { display: none; }
+/* full-width rows under the buttons; the padding keeps the text in a ~34em centred column */
+.chooser-note { flex-basis: 100%; margin: 0; padding-inline: max(var(--space-sm), calc(50% - 17em)); text-align: center; word-break: keep-all; font-size: var(--text-xs); color: var(--color-stage-muted); }
+.chooser-note.warn { color: #ffd84d; }
 .source-actions { display: flex; align-items: center; gap: var(--space-xs); }
 .video-msg { position: absolute; left: var(--space-xs); bottom: var(--space-xs); padding: var(--space-2xs) var(--space-sm); background: var(--color-scrim); color: var(--color-stage-ink); font-size: var(--text-sm); border-radius: var(--space-2xs); }
 .court-box { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; }

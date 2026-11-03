@@ -20,6 +20,7 @@ const COLORS = { observed: "#2fe36b", model: "#ff8a1f", line: "#e9efe9", net: "#
 const PROBE_TIMEOUT_MS = 15000;
 const NO_ANALYSIS = "선택한 영상, 분석 결과 없음";
 const AUTO_DONE = "자동 분석 결과";
+const NO_GPU_NOTE = "이 브라우저는 WebGPU를 쓸 수 없어 자동 분석이 되지 않습니다. 샘플 보기와 영상 재생은 됩니다.";
 const STAGE_LABELS = {
   read: "영상 읽기", decode: "영상 디코딩", load_models: "모델 불러오기", models: "모델 불러오기", pose_frames: "선수 프레임 준비",
   shuttle: "셔틀 추적", tracknet: "셔틀 추적", physics_runtime: "물리 엔진 불러오기", trajectory: "궤적 추정",
@@ -35,7 +36,7 @@ const el = {
   sample: $("btn-sample"), chooser: $("chooser"), sourceActions: $("source-actions"),
   sourceMsg: $("source-msg"), sourceState: $("source-state"), sourceName: $("source-name"), courtCue: $("court-cue"),
   stage: $("stage"), analyzing: $("analyzing"), analyzingLabel: $("analyzing-label"), analyzingProgress: $("analyzing-progress"),
-  cancel: $("btn-cancel"),
+  cancel: $("btn-cancel"), chooserReq: $("chooser-req"),
 };
 
 const state = { model: null, meta: null, videoError: null, analyzing: false };
@@ -704,4 +705,9 @@ window.addEventListener("pageshow", (e) => {
 });
 
 el.video.muted = true;
+// Say it on the first screen, before a pick: the worker refuses analysis without WebGPU anyway.
+if (!(globalThis.navigator && globalThis.navigator.gpu)) {
+  el.chooserReq.textContent = NO_GPU_NOTE;
+  el.chooserReq.classList.toggle("warn", true);
+}
 showEmpty(); // nothing is fetched or attached until the viewer chooses a source

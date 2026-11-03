@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
+import { LIMITS } from "../demo/browser/video.mjs";
 import { boot, pick, settle, space, waitFor } from "./app-harness.mjs";
 
 test("first visit is empty: no fetch, no video src, chooser shown, header actions and transport off", async () => {
@@ -109,4 +110,27 @@ test("markup: chooser holds a native upload label and a sample button; no middle
   assert.match(html, /<button type="button" id="btn-sample">샘플 보기<\/button>/);
   assert.ok(!/<video[^>]*\ssrc=/.test(html));
   assert.ok(!/·/.test(html + app));
+});
+
+test("first screen says what the tool does and, before any pick, what automatic analysis needs", async () => {
+  const html = readFileSync(new URL("../demo/index.html", import.meta.url), "utf8");
+  assert.match(html, /영상은 업로드되지 않습니다/);
+  // The visible limits follow the analyzer's own limits.
+  assert.match(html, new RegExp(`${LIMITS.maxDurationS}초, ${LIMITS.maxFrames}프레임 이하`));
+  const env = await boot(); // Node has no navigator.gpu: the note turns into the no-WebGPU warning
+  const req = env.els["chooser-req"];
+  assert.match(req.text, /WebGPU를 쓸 수 없어 자동 분석이 되지 않습니다/);
+  assert.equal(req.class_warn, true);
+});
+
+test("with WebGPU the first screen keeps the plain requirement note", async () => {
+  const saved = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  Object.defineProperty(globalThis, "navigator", { value: { gpu: {} }, configurable: true });
+  try {
+    const env = await boot();
+    assert.equal(env.els["chooser-req"].text, "");
+    assert.equal(env.els["chooser-req"].class_warn, undefined);
+  } finally {
+    Object.defineProperty(globalThis, "navigator", saved);
+  }
 });
