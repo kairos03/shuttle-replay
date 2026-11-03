@@ -110,3 +110,51 @@ test("markup: chooser holds a native upload label and a sample button; no middle
   assert.ok(!/<video[^>]*\ssrc=/.test(html));
   assert.ok(!/·/.test(html + app));
 });
+
+test("player name fields appear for the positions in the loaded result and reset for the next source", async () => {
+  const env = await boot();
+  const e = env.els;
+  assert.equal(e.names.hidden, true);
+  e["btn-sample"].click();
+  await waitFor(() => e.video.getAttribute("src") === "assets/real/source_clip.mp4");
+  assert.equal(e.names.hidden, false);
+  const labels = e["names-fields"].children;
+  assert.deepEqual(labels.map((l) => l.children[0]), [
+    "N1 (카메라 쪽, 처음 왼쪽)", "N2 (카메라 쪽, 처음 오른쪽)", "F1 (먼 쪽, 처음 왼쪽)", "F2 (먼 쪽, 처음 오른쪽)",
+  ]);
+  assert.equal(e["btn-swap-sides"].hidden, false);
+  const input = labels[0].children[1];
+  assert.equal(input.placeholder, "N1");
+  const video = e["cv-overlay"].drawn;
+  const court = e["cv-court"].drawn;
+  video.length = court.length = 0;
+  input.value = "철수";
+  input.dispatch("input"); // redraws with the name; nothing is stored or fetched
+  assert.ok(video.includes("철수")); // the video label
+  assert.ok(court.includes("철수")); // beside the court marker
+  assert.ok(court.includes("N1")); // the marker keeps its short id
+  assert.deepEqual(env.fetches, ["assets/real/analysis.json"]);
+  const played = e.video.played;
+  (env.docListeners.keydown || []).forEach((f) => f({ key: " ", target: { tagName: "SUMMARY" }, preventDefault() {} }));
+  assert.equal(e.video.played, played); // Space on the 선수 이름 summary toggles it, not playback
+  const fields = labels.map((l) => l.children[1]);
+  fields[3].value = "지영";
+  fields[3].dispatch("input");
+  video.length = court.length = 0;
+  e["btn-swap-sides"].click(); // change of ends: 철수 (N1) to F1, 지영 (F2) to N2
+  assert.deepEqual(fields.map((f) => f.value), ["", "지영", "철수", ""]);
+  assert.ok(court.includes("철수") && court.includes("지영"));
+  e["btn-swap-sides"].click();
+  assert.deepEqual(fields.map((f) => f.value), ["철수", "", "", "지영"]);
+  pick(e["in-video"], { name: "mine.mov" });
+  await waitFor(() => env.workers.length === 1);
+  env.workers[0].emit({ type: "failed", error: { code: "unsupported_codec", message: "코덱 미지원." } });
+  await waitFor(() => /^blob:/.test(e.video.getAttribute("src") || ""));
+  assert.equal(e.names.hidden, true); // no players in a result-less video
+  assert.deepEqual(e["names-fields"].children, []);
+  e.names.open = true;
+  e["btn-demo"].click(); // back to the sample: fresh, empty, collapsed
+  await waitFor(() => e["names-fields"].children.length === 4);
+  assert.equal(e.names.open, false);
+  assert.deepEqual(e["names-fields"].children.map((l) => l.children[1].value), ["", "", "", ""]);
+});

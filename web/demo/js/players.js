@@ -15,6 +15,47 @@ export const PLAYER_COLORS = Object.freeze({
   near: "#4fc3f7",
   far: "#ffd84d",
 });
+/**
+ * Court half and starting side of each identity, for the name fields (the court plan says
+ * 먼 쪽 / 카메라 쪽). Identities follow the tracked player, so left/right is only where they start.
+ */
+export const PLAYER_PLACE = Object.freeze({
+  "near-left": "카메라 쪽, 처음 왼쪽", "near-right": "카메라 쪽, 처음 오른쪽", "far-left": "먼 쪽, 처음 왼쪽",
+  "far-right": "먼 쪽, 처음 오른쪽", near: "카메라 쪽", far: "먼 쪽",
+});
+const OTHER_SIDE = Object.freeze({
+  "near-left": "far-left", "near-right": "far-right", "far-left": "near-left", "far-right": "near-right", near: "far", far: "near",
+});
+export const MAX_NAME_LENGTH = 16;
+
+/** Identities present anywhere in the file, in PLAYER_IDS then singles order. */
+export function presentPlayerIds(model) {
+  const seen = new Set();
+  for (const fr of (model && model.frames) || []) for (const p of fr.players) seen.add(p.id);
+  return [...PLAYER_IDS, ...SINGLES_PLAYER_IDS].filter((id) => seen.has(id));
+}
+
+/**
+ * Names after a change of ends: camera-side names move to the far side and back, team by
+ * team. Which partner starts left after the change is not known, so N1 goes to F1.
+ */
+export function swapSides(names) {
+  const out = {};
+  for (const [id, name] of Object.entries(names || {})) if (OTHER_SIDE[id]) out[OTHER_SIDE[id]] = name;
+  return out;
+}
+
+/** Swapping halves needs every identity's counterpart, or a name would move to a missing field. */
+export function canSwapSides(ids) {
+  return ids.length > 0 && ids.every((id) => ids.includes(OTHER_SIDE[id]));
+}
+
+/** Display label: the viewer's name for this position when given, else the short id. */
+export function playerLabel(id, names) {
+  const name = names && typeof names[id] === "string" ? names[id].trim().slice(0, MAX_NAME_LENGTH) : "";
+  return name || PLAYER_SHORT[id];
+}
+
 /** COCO-17 ankle keypoint indices (left, right). */
 export const ANKLES = Object.freeze([15, 16]);
 

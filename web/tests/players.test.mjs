@@ -2,19 +2,25 @@
 // Player boxes + manual court reference. All player data below is SYNTHETIC test input,
 // not inference output.
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { AnalysisError, LIMITS, validateAnalysis } from "../demo/js/analysis-model.js";
+import { AnalysisError, LIMITS, parseAnalysisText, validateAnalysis } from "../demo/js/analysis-model.js";
 import {
+  MAX_NAME_LENGTH,
   PLAYER_IDS,
   PLAYER_SHORT,
   courtCaption,
   courtMarkerVisible,
   fitLabel,
+  canSwapSides,
   playerCounts,
+  playerLabel,
   playerReadout,
   playerTrail,
   playersMapAvailable,
+  presentPlayerIds,
+  swapSides,
 } from "../demo/js/players.js";
 import { modelAvailable } from "../demo/js/presentation.js";
 import { clone, fixture } from "./helpers.mjs";
@@ -230,4 +236,31 @@ test("labels fit inside the content rect and canvas", () => {
   }
   // Label prefers above the box top when room exists.
   assert.deepEqual(fitLabel(100, 100, 24, 14, rect, cw, ch), { x: 100, y: 86 });
+});
+
+test("name fields follow the positions present in the file; labels fall back to the short id", () => {
+  const real = parseAnalysisText(readFileSync(new URL("../demo/assets/real/analysis.json", import.meta.url), "utf8"));
+  assert.deepEqual(presentPlayerIds(real), ["near-left", "near-right", "far-left", "far-right"]);
+  assert.deepEqual(presentPlayerIds(null), []);
+  assert.equal(playerLabel("near-left", {}), "N1");
+  assert.equal(playerLabel("near-left", { "near-left": "  철수  " }), "철수");
+  assert.equal(playerLabel("far", { far: "   " }), "F");
+  assert.equal(playerLabel("far-right", { "far-right": "가".repeat(40) }), "가".repeat(MAX_NAME_LENGTH));
+});
+
+test("a change of ends moves names to the other court half, team by team, and back", () => {
+  const names = { "near-left": "철수", "near-right": "영희", "far-left": "민수", "far-right": "지영" };
+  const swapped = swapSides(names);
+  assert.deepEqual(swapped, { "far-left": "철수", "far-right": "영희", "near-left": "민수", "near-right": "지영" });
+  assert.deepEqual(swapSides(swapped), names);
+  assert.deepEqual(swapSides({ near: "A", far: "B" }), { far: "A", near: "B" });
+  assert.deepEqual(swapSides({ "near-left": "only" }), { "far-left": "only" }); // an empty side stays empty
+  assert.deepEqual(swapSides({ bogus: "x" }), {});
+  assert.deepEqual(swapSides(null), {});
+  assert.equal(names["near-left"], "철수"); // input untouched
+  assert.equal(canSwapSides(["near-left", "near-right", "far-left", "far-right"]), true);
+  assert.equal(canSwapSides(["near", "far"]), true);
+  assert.equal(canSwapSides(["near-left", "near-right", "far-left"]), false); // N2's name would have no field
+  assert.equal(canSwapSides(["near-left", "near-right"]), false);
+  assert.equal(canSwapSides([]), false);
 });

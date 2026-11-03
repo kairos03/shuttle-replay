@@ -49,6 +49,14 @@
 .source-actions { display: flex; align-items: center; gap: var(--space-xs); }
 .video-msg { position: absolute; left: var(--space-xs); bottom: var(--space-xs); padding: var(--space-2xs) var(--space-sm); background: var(--color-scrim); color: var(--color-stage-ink); font-size: var(--text-sm); border-radius: var(--space-2xs); }
 .court-box { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; }
+.names { font-size: var(--text-sm); color: var(--color-stage-muted); padding: 0 var(--space-2xs); }
+.names[hidden] { display: none; }
+.names summary { cursor: pointer; }
+.names-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); /* N row, F row */ gap: var(--space-xs); margin-top: var(--space-xs); }
+.names-fields label { display: flex; flex-direction: column; gap: var(--space-3xs); font-size: var(--text-xs); }
+.names-fields input { font: inherit; font-size: var(--text-md); /* 16px: no iOS focus zoom */ color: var(--color-ink); background: var(--color-paper); border: var(--rule-hair) solid var(--color-muted); border-radius: var(--radius-control); padding: var(--space-3xs) var(--space-xs); min-height: 32px; }
+.names-swap { margin-top: var(--space-xs); }
+.names-note { margin: var(--space-xs) 0 0; font-size: var(--text-xs); word-break: keep-all; }
 #cv-court { display: block; height: min(440px, 70vh); width: auto; max-width: 100%; aspect-ratio: 7.3 / 15.2; }
 
 /* automatic analysis: one restrained overlay over both the video and the court */
@@ -75,7 +83,7 @@ button, .pick {
 button[hidden] { display: none; }
 button:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
 button:hover:not(:disabled), .pick:hover { border-color: var(--color-ink-2); background: var(--light); }
-button:focus-visible, input:focus-visible, .pick:focus-within { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, summary:focus-visible, .pick:focus-within { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 button.primary, .pick { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-accent-ink); font-weight: 600; }
 button.primary { min-width: 6em; justify-content: center; }
 button.primary:hover:not(:disabled), .pick:hover { background: var(--color-accent-deep); border-color: var(--color-accent-deep); }

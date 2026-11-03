@@ -7,8 +7,14 @@ import { readFileSync } from "node:fs";
 
 export const REAL_JSON = readFileSync(new URL("../demo/assets/real/analysis.json", import.meta.url), "utf8");
 export const BASE = "http://127.0.0.1/demo/";
-const ctx = new Proxy({}, {
-  get: (_t, k) => (k === "measureText" ? () => ({ width: 10 }) : () => {}),
+// One 2D context per canvas; fillText/strokeText strings land in that canvas's `drawn`.
+const context = (cv) => new Proxy({}, {
+  get: (_t, k) => {
+    if (k === "measureText") return () => ({ width: 10 });
+    if (k === "fillText" || k === "strokeText") return (s) => cv.drawn.push(String(s));
+    if (k === "canvas") return cv;
+    return () => {};
+  },
   set: () => true,
 });
 
@@ -25,7 +31,7 @@ class El {
   removeAttribute(k) { delete this.attrs[k]; }
   replaceChildren(...c) { this.children = c; this.textContent = ""; }
   append(...c) { this.children.push(...c); }
-  getContext() { return ctx; }
+  getContext() { this.drawn ??= []; return (this.ctx ??= context(this)); }
   click() { if (!this.disabled) this.dispatch("click"); }
   get text() { return this.textContent || this.children.filter((c) => typeof c === "string").join(""); }
 }
@@ -47,7 +53,7 @@ class Video extends El {
 
 const IDS = ["video", "cv-overlay", "cv-court", "video-msg", "rng-time", "btn-play", "in-video", "in-video-first", "btn-demo",
   "btn-sample", "chooser", "source-actions", "source-msg", "source-state", "source-name", "court-cue",
-  "stage", "analyzing", "analyzing-label", "analyzing-progress", "btn-cancel"];
+  "stage", "analyzing", "analyzing-label", "analyzing-progress", "btn-cancel", "names", "names-fields", "btn-swap-sides"];
 let n = 0;
 
 class FakeWorker {

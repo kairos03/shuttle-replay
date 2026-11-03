@@ -10,7 +10,7 @@ import { FrameClock } from "./frame-clock.js";
 import { containTransform, mapTrailRuns } from "./view-geometry.js";
 import { PairLoader } from "./pair-loader.js";
 import { plainCopy } from "./presentation.js";
-import { ANKLES, PLAYER_COLORS, courtMarkerVisible, fitLabel, playerTrail, playersMapAvailable } from "./players.js";
+import { ANKLES, MAX_NAME_LENGTH, PLAYER_COLORS, PLAYER_PLACE, PLAYER_SHORT, courtMarkerVisible, fitLabel, canSwapSides, playerLabel, playerTrail, playersMapAvailable, presentPlayerIds, swapSides } from "./players.js";
 import { BrowserAnalyzer } from "../browser/analyzer.mjs";
 import { SHUTTLE_MAP_COLOR, shuttleEdgeArrow, shuttleLabelBox, shuttleRefLabel, shuttleRefTrail } from "./shuttle-map.js";
 
@@ -35,10 +35,10 @@ const el = {
   sample: $("btn-sample"), chooser: $("chooser"), sourceActions: $("source-actions"),
   sourceMsg: $("source-msg"), sourceState: $("source-state"), sourceName: $("source-name"), courtCue: $("court-cue"),
   stage: $("stage"), analyzing: $("analyzing"), analyzingLabel: $("analyzing-label"), analyzingProgress: $("analyzing-progress"),
-  cancel: $("btn-cancel"),
+  cancel: $("btn-cancel"), names: $("names"), namesFields: $("names-fields"), swapSides: $("btn-swap-sides"),
 };
 
-const state = { model: null, meta: null, videoError: null, analyzing: false };
+const state = { model: null, meta: null, videoError: null, analyzing: false, names: {} };
 
 // ---------- loading ----------
 
@@ -218,6 +218,7 @@ function activate(pair) {
   if (pair.owned) setSourceMsg(pair.model ? AUTO_DONE : NO_ANALYSIS, pair.label);
   else setSourceMsg("");
   showCourtCue(pair.model);
+  showNameFields(pair.model);
   setRange();
   layoutCanvases();
   render(toAnalysisTime(0, OFFSET));
@@ -238,6 +239,7 @@ function showEmpty() {
   el.video.removeAttribute("src");
   el.video.load();
   el.courtCue.replaceChildren();
+  showNameFields(null);
   setSourceMsg("");
   setChosen(false);
   layoutCanvases();
@@ -262,6 +264,46 @@ function showCourtCue(m) {
     }
   }
 }
+
+/**
+ * One name field per position present in the file. Names are display-only, start empty for
+ * every newly loaded source and are never stored or sent anywhere.
+ */
+let nameInputs = {};
+function showNameFields(m) {
+  state.names = {};
+  nameInputs = {};
+  const ids = presentPlayerIds(m);
+  el.names.hidden = ids.length === 0;
+  el.names.open = false;
+  el.swapSides.hidden = !canSwapSides(ids);
+  el.namesFields.replaceChildren(
+    ...ids.map((id) => {
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = MAX_NAME_LENGTH;
+      input.autocomplete = "off";
+      input.spellcheck = false;
+      input.autocapitalize = "off";
+      input.placeholder = PLAYER_SHORT[id];
+      input.addEventListener("input", () => {
+        state.names = { ...state.names, [id]: input.value };
+        render(currentAnalysisTime());
+      });
+      label.append(`${PLAYER_SHORT[id]} (${PLAYER_PLACE[id]})`, input);
+      nameInputs[id] = input;
+      return label;
+    }),
+  );
+}
+
+// After a change of ends the teams swap court halves: move the names with them.
+el.swapSides.addEventListener("click", () => {
+  state.names = swapSides(state.names);
+  for (const [id, input] of Object.entries(nameInputs)) input.value = state.names[id] || "";
+  render(currentAnalysisTime());
+});
 
 function setRange() {
   const m = state.model;
@@ -413,13 +455,14 @@ function drawPlayersOnVideo(ctx, fr, t, vw, vh, dpr, cv) {
         drawDot(ctx, qx, qy, 3 * dpr, color, "#10161a");
       }
     }
-    const lw = ctx.measureText(p.short).width + 8 * dpr;
+    const text = playerLabel(p.id, state.names);
+    const lw = ctx.measureText(text).width + 8 * dpr;
     const lh = 15 * dpr;
     const pos = fitLabel(ax, ay, lw, lh, rect, cv.width, cv.height);
     ctx.fillStyle = color;
     ctx.fillRect(pos.x, pos.y, lw, lh);
     ctx.fillStyle = "#10161a";
-    ctx.fillText(p.short, pos.x + 4 * dpr, pos.y + 2 * dpr);
+    ctx.fillText(text, pos.x + 4 * dpr, pos.y + 2 * dpr);
   }
   ctx.textBaseline = "alphabetic";
 }
@@ -608,6 +651,22 @@ function drawPlayersOnCourt(ctx, fr, map, dpr) {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(p.short, x, y);
+      const name = playerLabel(p.id, state.names);
+      if (name !== p.short) {
+        // The dot keeps the short id; a given name sits beside it.
+        ctx.font = `600 ${10 * dpr}px system-ui, sans-serif`;
+        // Beside the dot on the right, or on the left when it would run off the plan.
+        const w = ctx.measureText(name).width;
+        const right = x + 9 * dpr + w <= ctx.canvas.width;
+        const nx = right ? x + 9 * dpr : Math.max(x - 9 * dpr, w + 2 * dpr); // never past either edge
+        ctx.textAlign = right ? "left" : "right";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 3 * dpr;
+        ctx.strokeStyle = "#10161a";
+        ctx.strokeText(name, nx, y);
+        ctx.fillStyle = color;
+        ctx.fillText(name, nx, y);
+      }
       ctx.textAlign = "start";
       ctx.textBaseline = "alphabetic";
     }
@@ -679,7 +738,7 @@ el.sample.addEventListener("click", () => loadSample());
 
 document.addEventListener("keydown", (e) => {
   const tag = e.target && e.target.tagName;
-  if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || tag === "BUTTON" || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || tag === "BUTTON" || tag === "SUMMARY" || e.altKey || e.ctrlKey || e.metaKey) return;
   if (e.key === " ") {
     e.preventDefault();
     el.play.click();
